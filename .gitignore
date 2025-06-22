@@ -1,0 +1,7 @@
+.key
+.venv
+junk/
+data/
+logs/
+*~
+__pycache__/
