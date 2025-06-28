@@ -41,9 +41,9 @@ def create_edge_data_summary(edge_presummaries: list[dict]) -> str:
     return retval
 
 def create_query_summary(object_id: str, object_data: dict) -> str:
-    prog = '.attributes[] | select(.attribute_type_id == "biothings_annotations") | .value[0].disease_ontology.def'
+    jqprog = jq.compile('.attributes[] | select(.attribute_type_id == "biothings_annotations") | .value[0].disease_ontology.def')
     name = object_data['name']
-    definition = jq.compile(prog).input_text(json.dumps(object_data)).first()
+    definition = jqprog.input_text(json.dumps(object_data)).first()
     if definition:
         definition = f"A brief definition of this disease: {definition}"
     retval = f"""The following data is a response to the query: "What drugs may treat the disease: '{name}'.
