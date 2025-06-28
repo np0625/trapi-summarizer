@@ -2,7 +2,7 @@ import json
 import argparse
 import os
 from graphwerk import trapimsg
-import summarizer
+import summarizer_tools as st
 
 def load_file(path: str) -> dict:
     with open(path, 'r') as f:
@@ -58,7 +58,7 @@ def main():
     res_nodes = {}
     trapimsg.collect_edges_and_sgs_for_res_elem(res_zero, orig_kg, orig_ag, res_edges, res_sgs)
     trapimsg.collect_nodes_for_edge_collection(res_edges, orig_kg, res_nodes)
-    object_node_id, object_node_data = summarizer.get_object_node(orig_qg, orig_kg)
+    object_node_id, object_node_data = st.get_object_node(orig_qg, orig_kg)
     retval = {
         'nodes': res_nodes,
         'edges': res_edges
@@ -67,18 +67,18 @@ def main():
     #print(json.dumps(res_edges))
     # print(json.dumps(res_nodes))
     # print(f"num all edges: {len(res_edges.keys())}")
-    # uniq_edges = summarizer.extract_unique_edges(res_edges.values())
+    # uniq_edges = st.extract_unique_edges(res_edges.values())
     #print(json.dumps(uniq_edges))
     # print(f"num uniq edges: {len(uniq_edges)}")
-    subject_node = summarizer.get_object_node(orig_qg, orig_kg)
+    subject_node = st.get_object_node(orig_qg, orig_kg)
     # print(json.dumps(subject_node))
-    presum_edges = summarizer.create_edge_presummary_raw_data(res_edges)
-    presum_nodes = summarizer.create_node_presummary_raw_data(res_nodes, object_node_id)
+    presum_edges = st.create_edge_presummary_raw_data(res_edges, res_nodes)
+    presum_nodes = st.create_node_presummary_raw_data(res_nodes, object_node_id)
     #print(json.dumps(presum_nodes))
     #print(presum_edges)
     # print(presum_nodes)
-    print(summarizer.create_node_section(presum_nodes))
-    print(summarizer.create_edge_section(presum_edges, res_nodes))
+    print(st.create_node_section(presum_nodes))
+    print(st.create_edge_section(presum_edges))
 
 
 if __name__ == '__main__':
