@@ -78,8 +78,8 @@ def main():
     #print(json.dumps(presum_nodes))
     #print(presum_edges)
     # print(presum_nodes)
-    print(summarizer.create_node_section(presum_nodes))
-    print(summarizer.create_edge_section(presum_edges))
+    print(summarizer.create_node_data_summary(presum_nodes))
+    print(summarizer.create_edge_data_summary(presum_edges))
 
 
 if __name__ == '__main__':

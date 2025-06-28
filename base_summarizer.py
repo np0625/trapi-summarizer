@@ -1,6 +1,6 @@
 import re
 
-def create_node_section(node_presummaries: list[dict]) -> str:
+def create_node_data_summary(node_presummaries: list[dict]) -> str:
     retval = """
 Here are the biological entities involved.
 
@@ -17,7 +17,7 @@ The data is presented in the form:
     return retval
 
 
-def create_edge_section(edge_presummaries: list[dict]) -> str:
+def create_edge_data_summary(edge_presummaries: list[dict]) -> str:
     retval = """
 Here is the per-result reasoning data, in the form of sequences of triples,  that indicates relationships
 between biological entities that ultimately prove or support the primary query referenced above. Follow the
@@ -31,3 +31,6 @@ Each result's graph of relationships is presented in this form:
         retval += f"| {e['subject_name']} | {re.sub(r"^biolink:", '', e['predicate'])} | {e['object_name']} |\n"
     retval += '-' * 70
     return retval
+
+def create_query_summary():
+    pass
