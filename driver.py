@@ -42,6 +42,7 @@ def get_index_range(args) -> tuple[int, ...] | range:
     else:
         return range(args.start, args.end + 1)
 
+
 def main():
     args = parse_args()
     orig = load_file(args.input)
@@ -52,34 +53,29 @@ def main():
     orig_ag = orig_msg['auxiliary_graphs']
     orig_qg = orig_msg['query_graph']
 
-    res_zero = orig_msg['results'][idx_range[0]]
+    object_node_id, object_node_data = st.get_object_node_data(orig_qg, orig_kg)
+    print(summarizer.create_query_summary(object_node_id, object_node_data))
 
-    res_edges = {}
-    res_sgs = {}
-    res_nodes = {}
-    trapimsg.collect_edges_and_sgs_for_res_elem(res_zero, orig_kg, orig_ag, res_edges, res_sgs)
-    trapimsg.collect_nodes_for_edge_collection(res_edges, orig_kg, res_nodes)
-    object_node_id, object_node_data = st.get_object_node(orig_qg, orig_kg)
-    retval = {
-        'nodes': res_nodes,
-        'edges': res_edges
-    }
-    # print(json.dumps(retval))
-    #print(json.dumps(res_edges))
-    # print(json.dumps(res_nodes))
-    # print(f"num all edges: {len(res_edges.keys())}")
-    # uniq_edges = st.extract_unique_edges(res_edges.values())
-    #print(json.dumps(uniq_edges))
-    # print(f"num uniq edges: {len(uniq_edges)}")
-    subject_node = st.get_object_node(orig_qg, orig_kg)
-    # print(json.dumps(subject_node))
-    presum_edges = st.create_edge_presummary_raw_data(res_edges, res_nodes)
-    presum_nodes = st.create_node_presummary_raw_data(res_nodes, object_node_id)
-    #print(json.dumps(presum_nodes))
-    #print(presum_edges)
-    # print(presum_nodes)
-    print(summarizer.create_node_data_summary(presum_nodes))
-    print(summarizer.create_edge_data_summary(presum_edges))
+    counter = 1
+    for i in idx_range:
+        cur_res = orig_msg['results'][i]
+        subject_id = cur_res['node_bindings']['sn'][0]['id']
+        subject_name = orig_kg['nodes'][subject_id]['name']
+        print(f"## Result {counter}: {subject_name}\n")
+        res_edges = {}
+        res_sgs = {}
+        res_nodes = {} # note: refactor this out?
+        trapimsg.collect_edges_and_sgs_for_res_elem(cur_res, orig_kg, orig_ag, res_edges, res_sgs)
+        trapimsg.collect_nodes_for_edge_collection(res_edges, orig_kg, res_nodes)
+        retval = {
+            'nodes': res_nodes,
+            'edges': res_edges
+        }
+        presum_edges = st.create_edge_presummary_raw_data(res_edges, res_nodes)
+        presum_nodes = st.create_node_presummary_raw_data(res_nodes, object_node_id)
+        # print(summarizer.create_node_data_summary(presum_nodes))
+        print(summarizer.create_edge_data_summary(presum_edges))
+        counter += 1
 
 
 if __name__ == '__main__':

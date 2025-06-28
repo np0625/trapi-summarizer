@@ -3,8 +3,8 @@ from graphwerk import trapimsg
 
 """Get node data for the CURIE identified by the QG as the object of the query
 """
-def get_object_node(qg: dict, kg: dict) -> dict:
-    object_id = qg['nodes']['on']['ids'][0]
+def get_object_node_data(qg: dict, kg: dict, node_name='on') -> dict:
+    object_id = qg['nodes'][node_name]['ids'][0]
     return (object_id, kg['nodes'][object_id])
 
 """While edge_ids in a KG are unique, the subject-object-predicate triple often is not.
