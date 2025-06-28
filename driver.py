@@ -67,10 +67,6 @@ def main():
         res_nodes = {} # note: refactor this out?
         trapimsg.collect_edges_and_sgs_for_res_elem(cur_res, orig_kg, orig_ag, res_edges, res_sgs)
         trapimsg.collect_nodes_for_edge_collection(res_edges, orig_kg, res_nodes)
-        retval = {
-            'nodes': res_nodes,
-            'edges': res_edges
-        }
         presum_edges = st.create_edge_presummary_raw_data(res_edges, res_nodes)
         presum_nodes = st.create_node_presummary_raw_data(res_nodes, object_node_id)
         # print(summarizer.create_node_data_summary(presum_nodes))
