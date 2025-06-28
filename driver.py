@@ -3,6 +3,7 @@ import argparse
 import os
 from graphwerk import trapimsg
 import summarizer_tools as st
+import base_summarizer as summarizer
 
 def load_file(path: str) -> dict:
     with open(path, 'r') as f:
@@ -77,8 +78,8 @@ def main():
     #print(json.dumps(presum_nodes))
     #print(presum_edges)
     # print(presum_nodes)
-    print(st.create_node_section(presum_nodes))
-    print(st.create_edge_section(presum_edges))
+    print(summarizer.create_node_section(presum_nodes))
+    print(summarizer.create_edge_section(presum_edges))
 
 
 if __name__ == '__main__':
