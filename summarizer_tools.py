@@ -1,5 +1,7 @@
 import re
+import jq
 from graphwerk import trapimsg
+import jq_tools
 
 """Get node data for the CURIE identified by the QG as the object of the query
 """
@@ -27,12 +29,9 @@ def extract_unique_edges(edges: list[dict]) -> list[dict]:
 # Note: there is no way to tell which pubs are more important; so we just grab the first N
 """
 def extract_edge_publications(edge: dict, cutoff):
-    pubs = [
-        a['value'] for a in edge.get('attributes', [])
-        if a['attribute_type_id'] == 'biolink:publications'
-    ]
-    if len(pubs) > 0:
-        return pubs[0][:cutoff] # [0] because the value is itself an array
+    # pubs = jq.first('.attributes[] | select(.attribute_type_id == "biolink:publications") | .value', edge)
+    if len(pubs := jq_tools.try_first('.attributes[] | select(.attribute_type_id == "biolink:publications") | .value', edge, [])) > 0:
+        return pubs[:cutoff] # [0] because the value is itself an array
     else:
         return []
 
@@ -53,25 +52,17 @@ def create_edge_presummary_raw_data(edges: list[dict], node_collection: dict, pu
         for edge in uniq
     ]
 
-def create_node_presummary_raw_data(nodes: list[dict], object_node: str, category_cutoff=5) -> list[dict]:
-    retval = []
-    for key, val in nodes.items():
-        if key == object_node:
-            continue
-        elem = {
+def sanitize_categories(cats: list) -> list:
+    eliminate = ('biolink:NamedThing', 'biolink:BiologicalEntity', 'biolink:ThingWithTaxon',
+                   'biolink:PhysicalEssence', 'biolink:PhysicalEssenceOrOccurrent')
+    return [cat for cat in cats if cat not in eliminate]
+
+def create_node_presummary_raw_data(nodes: list[dict], category_cutoff=5) -> list[dict]:
+    return [
+        {
             'name': val['name'],
-            'categories': val.get('categories', [])[:category_cutoff],
-            'description': ''
-        }
-        descr = next((a['value'] for a in val.get('attributes', []) if a['attribute_type_id'] == 'biolink:description'), None)
-        if descr:
-            elem['description'] = descr
-        else:
-            biothings_annotations = next((a['value'] for a in val.get('attributes', []) if a['attribute_type_id'] == 'biothings_annotations'), None)
-            if biothings_annotations:
-                descr = biothings_annotations[0].get('unii', {}).get('ncit_description', None)
-                if descr:
-                    elem['description'] = descr
-        retval.append(elem)
-    return retval
+            'categories': sanitize_categories(val.get('categories', []))[:category_cutoff],
+            'curie': key
+        } for key, val in nodes.items()
+    ]
 

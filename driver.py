@@ -5,7 +5,7 @@ from graphwerk import trapimsg
 import summarizer_tools as st
 import base_summarizer as summarizer
 
-def load_file(path: str) -> dict:
+def load_trapi_response(path: str) -> dict:
     with open(path, 'r') as f:
         data = json.load(f)
     return data
@@ -45,34 +45,9 @@ def get_index_range(args) -> tuple[int, ...] | range:
 
 def main():
     args = parse_args()
-    orig = load_file(args.input)
+    orig = load_trapi_response(args.input)
     idx_range = get_index_range(args)
-
-    orig_msg = orig['fields']['data']['message']
-    orig_kg = orig_msg['knowledge_graph']
-    orig_ag = orig_msg['auxiliary_graphs']
-    orig_qg = orig_msg['query_graph']
-
-    object_node_id, object_node_data = st.get_object_node_data(orig_qg, orig_kg)
-    print(summarizer.create_query_summary(object_node_id, object_node_data))
-
-    counter = 1
-    for i in idx_range:
-        cur_res = orig_msg['results'][i]
-        subject_id = cur_res['node_bindings']['sn'][0]['id']
-        subject_name = orig_kg['nodes'][subject_id]['name']
-        print(f"## Result {counter}: {subject_name}\n")
-        res_edges = {}
-        res_sgs = {}
-        res_nodes = {} # note: refactor this out?
-        trapimsg.collect_edges_and_sgs_for_res_elem(cur_res, orig_kg, orig_ag, res_edges, res_sgs)
-        trapimsg.collect_nodes_for_edge_collection(res_edges, orig_kg, res_nodes)
-        presum_edges = st.create_edge_presummary_raw_data(res_edges, res_nodes)
-        presum_nodes = st.create_node_presummary_raw_data(res_nodes, object_node_id)
-        # print(summarizer.create_node_data_summary(presum_nodes))
-        print(summarizer.create_edge_data_summary(presum_edges))
-        counter += 1
-
+    print(summarizer.create_response(orig, idx_range))
 
 if __name__ == '__main__':
     main()
