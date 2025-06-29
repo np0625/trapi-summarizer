@@ -22,10 +22,7 @@ def get_pub_info(pubids: list[str], request_id: str, timeout: float=4.0) -> dict
         httpx.HTTPStatusError: If the response has an HTTP error status
     """
 
-    # Join pubids with comma for URL parameter
     pubids_param = ','.join(pubids)
-
-    # Construct the URL with parameters
     url = "https://docmetadata.transltr.io/publications"
     params = {
         'pubids': pubids_param,
