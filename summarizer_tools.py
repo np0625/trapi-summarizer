@@ -29,11 +29,8 @@ def extract_unique_edges(edges: list[dict]) -> list[dict]:
 # Note: there is no way to tell which pubs are more important; so we just grab the first N
 """
 def extract_edge_publications(edge: dict, cutoff):
-    # pubs = jq.first('.attributes[] | select(.attribute_type_id == "biolink:publications") | .value', edge)
-    if len(pubs := jq_tools.try_first('.attributes[] | select(.attribute_type_id == "biolink:publications") | .value', edge, [])) > 0:
-        return pubs[:cutoff] # [0] because the value is itself an array
-    else:
-        return []
+    retval = jq_tools.try_first('.attributes[] | select(.attribute_type_id == "biolink:publications") | .value', edge, [])
+    return retval[:cutoff]
 
 """Given the list of all edge data corresponding to the targeted results, return
 only the unique triples and the precise fields that will be used to generate textual summaries.
