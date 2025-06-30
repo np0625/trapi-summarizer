@@ -54,6 +54,7 @@ def main():
     if (args.template):
         template = openai_lib.expand_yaml_template(args.template, ('instructions',))
         print(template)
+    print(kg_summary)
 
 
 if __name__ == '__main__':
