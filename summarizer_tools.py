@@ -35,7 +35,7 @@ def extract_edge_publications(edge: dict, cutoff):
 """Given the list of all edge data corresponding to the targeted results, return
 only the unique triples and the precise fields that will be used to generate textual summaries.
 """
-def create_edge_presummary_raw_data(edges: list[dict], node_collection: dict, pub_cutoff=10) -> list[dict]:
+def create_edge_presummary_raw_data(edges: list[dict], node_collection: dict, pub_cutoff=5) -> list[dict]:
     uniq = extract_unique_edges(edges.values())
     return [
         {
