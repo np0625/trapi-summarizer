@@ -46,16 +46,17 @@ provides the associated reasoning/knowledge graph.
 def create_node_data_summary(node_presummaries: list[dict]) -> str:
     retval = """* NODE INFORMATION
 
-   | <entity name> | <categories, comma separated> |\n\n"""
+   | <entity name> | <categories> |\n\n"""
     for n in node_presummaries:
         retval += f"| {n['name']} | {", ".join(re.sub(r"^biolink:", "", a) for a in n['categories'])} |\n"
     return retval;
 
 
 def create_edge_data_summary(edge_presummaries: list[dict]) -> str:
-    retval = '| <subject> | <predicate> | <object> |\n'
+    retval = '| <subject> | <predicate> | <object> | <pubmed ids> |\n'
     for e in edge_presummaries[1:]: # Try skipping the first element, which is the main "treats" edge
-        retval += f"| {e['subject_name']} | {re.sub(r"^biolink:", '', e['predicate'])} | {e['object_name']} |\n"
+        retval += f"| {e['subject_name']} | {re.sub(r"^biolink:", '', e['predicate'])} | {e['object_name']} | "
+        retval += ",".join(e['pub_ids']) + " |\n"
     return retval
 
 def create_query_summary(object_id: str, object_data: dict) -> str:
