@@ -4,6 +4,7 @@ import os
 from graphwerk import trapimsg
 import summarizer_tools as st
 import base_summarizer as summarizer
+import openai_lib
 
 def load_trapi_response(path: str) -> dict:
     with open(path, 'r') as f:
@@ -17,6 +18,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--start', type=int, help='Starting index in results array')
     parser.add_argument('--end', type=int, help='Ending index (exclusive) in results array')
     parser.add_argument('--list', type=str, help='Comma-separated list of indices, e.g. --list=9,18,202')
+    parser.add_argument('--template', type=str, help='YAML template for OpenAI query')
     args = parser.parse_args()
 
     # Validate arguments
@@ -44,10 +46,15 @@ def get_index_range(args) -> tuple[int, ...] | range:
 
 
 def main():
+    client = openai_lib.OpenAIClient(os.environ['OPENAI_KEY'])
     args = parse_args()
     orig = load_trapi_response(args.input)
     idx_range = get_index_range(args)
-    print(summarizer.create_response(orig, idx_range))
+    kg_summary = summarizer.summarize_trapi_response(orig, idx_range)
+    if (args.template):
+        template = openai_lib.expand_yaml_template(args.template, ('instructions',))
+        print(template)
+
 
 if __name__ == '__main__':
     main()
