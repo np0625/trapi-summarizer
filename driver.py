@@ -19,6 +19,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--end', type=int, help='Ending index (exclusive) in results array')
     parser.add_argument('--list', type=str, help='Comma-separated list of indices, e.g. --list=9,18,202')
     parser.add_argument('--template', type=str, help='YAML template for OpenAI query')
+    parser.add_argument('--run', type=bool, default=False, help='Run the query implied by the template')
     args = parser.parse_args()
 
     # Validate arguments
@@ -50,11 +51,17 @@ def main():
     args = parse_args()
     orig = load_trapi_response(args.input)
     idx_range = get_index_range(args)
-    kg_summary = summarizer.summarize_trapi_response(orig, idx_range)
+    kg_summary = summarizer.summarize_trapi_response(orig, idx_range, 8)
     if (args.template):
         template = openai_lib.expand_yaml_template(args.template, ('instructions',))
-        print(template)
-    print(kg_summary)
+    if (args.run):
+        resp = client._client.responses.create(**template['params'],
+                                               instructions=template['instructions'],
+                                               input=kg_summary)
+        print(resp)
+    else:
+        print(kg_summary)
+        print(json.dumps(template, indent=2))
 
 
 if __name__ == '__main__':
