@@ -4,7 +4,7 @@ import json
 import summarizer_tools as st
 from graphwerk import trapimsg
 
-def summarize_trapi_response(trapi_response_msg: dict, idx_range: range) -> str:
+def summarize_trapi_response(trapi_response_msg: dict, idx_range: range, pub_cutoff=5) -> str:
     orig_msg = trapi_response_msg['fields']['data']['message']
     orig_kg = orig_msg['knowledge_graph']
     orig_ag = orig_msg['auxiliary_graphs']
@@ -25,7 +25,7 @@ def summarize_trapi_response(trapi_response_msg: dict, idx_range: range) -> str:
         res_sgs = {}
         trapimsg.collect_edges_and_sgs_for_res_elem(cur_res, orig_kg, orig_ag, res_edges, res_sgs)
         trapimsg.collect_nodes_for_edge_collection(res_edges, orig_kg, res_nodes)
-        presum_edges = st.create_edge_presummary_raw_data(res_edges, res_nodes)
+        presum_edges = st.create_edge_presummary_raw_data(res_edges, res_nodes, pub_cutoff)
         presum_nodes = st.create_node_presummary_raw_data(res_nodes)
         per_result += create_edge_data_summary(presum_edges) + '\n'
         counter += 1
