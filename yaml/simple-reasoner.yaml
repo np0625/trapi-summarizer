@@ -1,0 +1,6 @@
+params:
+  model: o3
+  reasoning:
+    effort: medium
+    summary: detailed
+instructions: !file instructions-what-drugs-may-treat.txt

@@ -1,0 +1,25 @@
+params:
+  model: o3
+  reasoning:
+    effort: medium
+    summary: detailed
+  tools:
+    - type: function
+      name: get_pub_info
+      description: retrieve abstract, author, and article title and dates for a given comma-separated list of PMIDs
+      parameters:
+        type: object
+        properties:
+          pubids:
+            type: string
+            description: comma-separated list of PMIDS, e.g., "PMID:36008391,PMID:561202376"
+          request_id:
+            type: string
+            description: any unique identifier for this request to assist with tracing and debugging
+        additionalProperties: false
+        required: 
+          - pubids
+          - request_id
+        strict: true
+  tool_choice: auto
+instructions: !file instructions-what-drugs-may-treat.txt
