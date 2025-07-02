@@ -46,14 +46,14 @@ provides the associated reasoning/knowledge graph.
 def create_node_data_summary(node_presummaries: list[dict]) -> str:
     retval = """* NODE INFORMATION
 
-   | <entity name> | <categories> |\n\n"""
+| <ENTITY NAME> | <CATEGORIES> |\n"""
     for n in node_presummaries:
         retval += f"| {n['name']} | {", ".join(re.sub(r"^biolink:", "", a) for a in n['categories'])} |\n"
     return retval;
 
 
 def create_edge_data_summary(edge_presummaries: list[dict]) -> str:
-    retval = '| <subject> | <predicate> | <object> | <pubmed ids> |\n'
+    retval = '| <SUBJECT> | <PREDICATE> | <OBJECT> | <PUBMED IDS> |\n'
     for e in edge_presummaries[1:]: # Try skipping the first element, which is the main "treats" edge
         retval += f"| {e['subject_name']} | {re.sub(r"^biolink:", '', e['predicate'])} | {e['object_name']} | "
         retval += ",".join(e['pub_ids']) + " |\n"
