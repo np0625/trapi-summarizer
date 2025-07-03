@@ -1,11 +1,11 @@
 params:
   model: o3
   reasoning:
-    effort: medium
+    effort: high
     summary: detailed
   tools:
     - type: function
-      name: get_pub_info
+      name: get_publication_info
       description: retrieve abstract, author, and article title and dates for a given comma-separated list of PMIDs
       parameters:
         type: object
@@ -22,4 +22,4 @@ params:
           - request_id
         strict: true
   tool_choice: auto
-instructions: !file instructions-what-drugs-may-treat.txt
+instructions: !file instr-sr-2.txt
