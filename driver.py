@@ -5,6 +5,8 @@ from graphwerk import trapimsg
 import summarizer_tools as st
 import base_summarizer as summarizer
 import openai_lib
+import sys
+from pubmed_client import get_publication_info
 
 def load_trapi_response(path: str) -> dict:
     with open(path, 'r') as f:
@@ -14,12 +16,14 @@ def load_trapi_response(path: str) -> dict:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Trim down TRAPI response files')
     parser.add_argument('-n', type=int, default=100, help='Number of results to include (default: 100)')
-    parser.add_argument('-i', '--input', required=True, help='Input JSON file path')
+    parser.add_argument('-i', '--input', help='Input JSON file path of a TRAPI response')
     parser.add_argument('--start', type=int, help='Starting index in results array')
     parser.add_argument('--end', type=int, help='Ending index (exclusive) in results array')
     parser.add_argument('--list', type=str, help='Comma-separated list of indices, e.g. --list=9,18,202')
     parser.add_argument('--template', type=str, help='YAML template for OpenAI query')
-    parser.add_argument('--run', type=bool, default=False, help='Run the query implied by the template')
+    parser.add_argument('--run', type=bool, default=False, help='Run the query indicated by the template and input file')
+    parser.add_argument('--loop', type=bool, default=False, help='Run the query indicated by the template and input file')
+    parser.add_argument('--standalone', type=str, help='Execute an API query entirely from the provided yaml file')
     args = parser.parse_args()
 
     # Validate arguments
@@ -45,13 +49,70 @@ def get_index_range(args) -> tuple[int, ...] | range:
     else:
         return range(args.start, args.end + 1)
 
+def handle_fun_call(fun_name: str, args=str):
+    retval = ''
+    if fun_name == 'get_publication_info':
+        arg_dict = json.loads(args)
+        pub_ids = arg_dict['pubids'].split(',')
+        retval = json.dumps(get_publication_info(pub_ids, arg_dict['request_id']))
+    else:
+        print(f"WARNING: did not recognize #{fun_name} as a valid tool to call")
+
+    return retval
+
+def run_as_loop(client, kg_summary: str, template_data: dict) -> None:
+    prev_resp_id = None
+    input=kg_summary
+    complete = False
+    count = 1
+    while not complete:
+        print(f"Around the loop: {count}")
+        resp = client.responses.create(**template_data['params'],
+                                       instructions=template_data['instructions'],
+                                       previous_response_id=prev_resp_id,
+                                       input=input)
+        print(resp)
+        for elem in resp.output:
+            print(elem)
+            if elem.type == 'function_call':
+                fun_call_res = handle_fun_call(elem.name, elem.arguments)
+                # The Responses API expects a separate item with type "function_call_output" that contains
+                # the *content* (i.e. the tool's return value) and references the original tool call via
+                # the field `tool_call_id`. Using a different field name like `output` (or omitting the
+                # required one) causes the backend to complain with:
+                #   "No tool output found for function call <call_id>"
+                # Only the minimum set of properties are necessary – extra fields such as the original
+                # element id or status are ignored and can be omitted.
+
+                input = [{
+                    'type': 'function_call_output',
+                    'tool_call_id': elem.call_id,
+                    'content': fun_call_res
+                }]
+                print(input)
+            elif elem.type == 'message':
+                complete = True
+                print(resp.output_text) # SDK-only convenience property that aggregates all type=output_text elems from the output array
+            else:
+                print("Looping over elems...")
+        prev_resp_id = resp.id
+        count += 1
+
 
 def main():
     client = openai_lib.OpenAIClient(os.environ['OPENAI_KEY'])
     args = parse_args()
+    if (args.standalone):
+        expanded = openai_lib.expand_yaml_template(args.standalone, ('model', 'instructions', 'input'))
+        print(expanded)
+        resp = client.responses.create(**expanded)
+        print(resp)
+        sys.exit(0)
+
     orig = load_trapi_response(args.input)
     idx_range = get_index_range(args)
     kg_summary = summarizer.summarize_trapi_response(orig, idx_range, 8)
+
     if (args.template):
         template = openai_lib.expand_yaml_template(args.template, ('instructions',))
     if (args.run):
@@ -59,6 +120,10 @@ def main():
                                                instructions=template['instructions'],
                                                input=kg_summary)
         print(resp)
+    elif (args.loop):
+        print(f"i'm in loop: {args.loop}")
+        # sys.exit(0)
+        run_as_loop(client, kg_summary, template)
     else:
         print(kg_summary)
         print(json.dumps(template, indent=2))
