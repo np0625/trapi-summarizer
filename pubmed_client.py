@@ -1,6 +1,6 @@
 import httpx
 
-def get_pub_info(pubids: list[str], request_id: str, timeout: float=4.0) -> dict:
+def get_publication_info(pubids: list[str], request_id: str, timeout: float=4.0) -> dict:
     """
     Fetch publication information from the docmetadata.transltr.io API.
 
