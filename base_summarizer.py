@@ -46,9 +46,9 @@ provides the associated reasoning/knowledge graph.
 def create_node_data_summary(node_presummaries: list[dict]) -> str:
     retval = """* NODE INFORMATION
 
-| <ENTITY NAME> | <CATEGORIES> |\n"""
+| <ENTITY NAME> | <CATEGORIES> | <CURIE> |\n"""
     for n in node_presummaries:
-        retval += f"| {n['name']} | {", ".join(re.sub(r"^biolink:", "", a) for a in n['categories'])} |\n"
+        retval += f"| {n['name']} | {", ".join(re.sub(r"^biolink:", "", a) for a in n['categories'])} | {n['curie']} |\n"
     return retval;
 
 
