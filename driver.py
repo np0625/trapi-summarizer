@@ -76,18 +76,13 @@ def run_as_loop(client, kg_summary: str, template_data: dict) -> None:
             print(elem)
             if elem.type == 'function_call':
                 fun_call_res = handle_fun_call(elem.name, elem.arguments)
-                # The Responses API expects a separate item with type "function_call_output" that contains
-                # the *content* (i.e. the tool's return value) and references the original tool call via
-                # the field `tool_call_id`. Using a different field name like `output` (or omitting the
-                # required one) causes the backend to complain with:
-                #   "No tool output found for function call <call_id>"
-                # Only the minimum set of properties are necessary – extra fields such as the original
-                # element id or status are ignored and can be omitted.
-
+                # The server already has the function_call in its stored history (we pass
+                # previous_response_id), so we must send *only* the companion output item. Resending the
+                # original element would duplicate its id and trigger a 400 error.
                 input = [{
                     'type': 'function_call_output',
-                    'tool_call_id': elem.call_id,
-                    'content': fun_call_res
+                    'call_id': elem.call_id,
+                    'output': fun_call_res
                 }]
                 print(input)
             elif elem.type == 'message':
@@ -115,15 +110,15 @@ def main():
 
     if (args.template):
         template = openai_lib.expand_yaml_template(args.template, ('instructions',))
+
     if (args.run):
         resp = client._client.responses.create(**template['params'],
                                                instructions=template['instructions'],
                                                input=kg_summary)
         print(resp)
     elif (args.loop):
-        print(f"i'm in loop: {args.loop}")
-        # sys.exit(0)
-        run_as_loop(client, kg_summary, template)
+        resp = client.run_as_loop(kg_summary, template, handle_fun_call)
+        print(resp)
     else:
         print(kg_summary)
         print(json.dumps(template, indent=2))
