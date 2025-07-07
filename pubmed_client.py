@@ -5,7 +5,7 @@ def get_publication_info(pubids: list[str], request_id: str, timeout: float=4.0)
     Fetch publication information from the docmetadata.transltr.io API.
 
     Args:
-        pubids: List of PUBMED IDs (e.g., ['PMID:36008391', 'PMID:8959199']). Other ids will not work
+        pubids: List of PUBMED and PMCIDs (e.g., ['PMID:36008391', 'PMID:8959199', 'PMC8959199']). Other ids will not work
         request_id: Unique identifier for the request (can be a placeholder for the foreseeable)
         timeout: Request timeout in seconds (default: 4.0)
 
@@ -13,7 +13,7 @@ def get_publication_info(pubids: list[str], request_id: str, timeout: float=4.0)
         { _meta: { n_results: N, processing time, etc. }
           results { "PMID:999": { "abstract": ..., "article_title": ..., etc.}
                     ... }
-          not_found: ["PMC:999", ...]
+          not_found: ["blah", ...]
         }
 
     Raises:
@@ -22,7 +22,13 @@ def get_publication_info(pubids: list[str], request_id: str, timeout: float=4.0)
         httpx.HTTPStatusError: If the response has an HTTP error status
     """
 
-    pubids_param = ','.join(pubids)
+    # If an ID starts with "PMC:" (including the colon), drop the colon so the
+    # API sees e.g. "PMC12345" instead of "PMC:12345".
+    sanitized_pubids = [
+        pid.replace("PMC:", "PMC", 1) if pid.upper().startswith("PMC:") else pid
+        for pid in pubids
+    ]
+    pubids_param = ','.join(sanitized_pubids)
     url = "https://docmetadata.transltr.io/publications"
     params = {
         'pubids': pubids_param,
@@ -43,4 +49,4 @@ def get_publication_info(pubids: list[str], request_id: str, timeout: float=4.0)
 
 
 if __name__ == "__main__":
-    print(get_pub_info(('PMID:36008391','PMID:36008392','PMC:8959199'), 'bob'))
+    print(get_pub_info(('PMID:36008391','PMID:36008392','PMC8959199','not_an_id'), 'bob'))
