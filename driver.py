@@ -60,39 +60,6 @@ def handle_fun_call(fun_name: str, args=str):
 
     return retval
 
-def run_as_loop(client, kg_summary: str, template_data: dict) -> None:
-    prev_resp_id = None
-    input=kg_summary
-    complete = False
-    count = 1
-    while not complete:
-        print(f"Around the loop: {count}")
-        resp = client.responses.create(**template_data['params'],
-                                       instructions=template_data['instructions'],
-                                       previous_response_id=prev_resp_id,
-                                       input=input)
-        print(resp)
-        for elem in resp.output:
-            print(elem)
-            if elem.type == 'function_call':
-                fun_call_res = handle_fun_call(elem.name, elem.arguments)
-                # The server already has the function_call in its stored history (we pass
-                # previous_response_id), so we must send *only* the companion output item. Resending the
-                # original element would duplicate its id and trigger a 400 error.
-                input = [{
-                    'type': 'function_call_output',
-                    'call_id': elem.call_id,
-                    'output': fun_call_res
-                }]
-                print(input)
-            elif elem.type == 'message':
-                complete = True
-                print(resp.output_text) # SDK-only convenience property that aggregates all type=output_text elems from the output array
-            else:
-                print("Looping over elems...")
-        prev_resp_id = resp.id
-        count += 1
-
 
 def main():
     client = openai_lib.OpenAIClient(os.environ['OPENAI_KEY'])
