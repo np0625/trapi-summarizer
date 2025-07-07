@@ -1,0 +1,30 @@
+model: o3
+reasoning:
+  effort: medium
+  summary: detailed
+tools:
+  - type: function
+    name: get_pub_info
+    description: retrieve abstract, author, and article title and dates for papers, specified by a given comma-separated list of PMIDs
+    parameters:
+      type: object
+      properties:
+        pubids:
+          type: string
+          description: comma-separated list of PMIDS, e.g., "PMID:36008391,PMID:561202376"
+        request_id:
+          type: string
+          description: any unique identifier for this request to assist with tracing and debugging
+      additionalProperties: false
+      required: 
+        - pubids
+        - request_id
+      strict: true
+tool_choice: auto
+instructions: >
+  You must retrieve and briefly summarize (less than 500 words max.) the information in a set of
+  abstracts of papers in the biomedical space. You will be provided the IDs of the papers and
+  a tool you can use to retrieve their publication metadata including the abstract.
+input: >
+  What information is contained in the following papers: PMID:36008391,PMID:36008392?
+  

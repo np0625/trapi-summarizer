@@ -1,0 +1,6 @@
+model: o3
+reasoning:
+  effort: high
+  summary: detailed
+instructions: !file instr-single-result.txt
+
