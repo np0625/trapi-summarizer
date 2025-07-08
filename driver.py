@@ -7,8 +7,20 @@ import base_summarizer as summarizer
 import openai_lib
 import sys
 from pubmed_client import get_publication_info
+import ars_client
+import uuid
 
-def load_trapi_response(path: str) -> dict:
+def is_pk(value: str) -> bool:
+    try:
+        return uuid.UUID(str(value)).version == 4
+    except ValueError:
+        return False
+
+def load_trapi_response(source: str) -> dict:
+    if is_pk(source):
+        path = ars_client.fetch_response(source)
+    else:
+        path = source
     with open(path, 'r') as f:
         data = json.load(f)
     return data
@@ -85,7 +97,10 @@ def main():
         print(resp)
     elif (args.loop):
         resp = client.run_as_loop(kg_summary, template, handle_fun_call)
-        print(resp)
+        # print(resp)
+        print(resp.output_text)
+
+
     else:
         print(kg_summary)
         print(json.dumps(template, indent=2))
