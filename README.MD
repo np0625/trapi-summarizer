@@ -1,6 +1,6 @@
 # What this module does
 
-This module produces AI-generated summaries of portions of TRAPI response messages
+This module produces AI-generated summaries of portions of TRAPI response messages. At present it only targets OpenAI's Responses API.
 
 It takes as input a TRAPI response message and a set of indices that indicate which elements of the `results` array to include in the summary.
 
@@ -27,3 +27,5 @@ To use this module, you must provide your own OpenAI API key.
   - `--loop`: Provide this when your API call contains a tool-calling loop
   - `--run`: Provide this when your API call doesn't use tools and will produce a single response
 
+If you provide neither of --loop or --run, the program will print the query request payload and exit without
+submitting it.
