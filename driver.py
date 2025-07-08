@@ -33,8 +33,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--end', type=int, help='Ending index (exclusive) in results array')
     parser.add_argument('--list', type=str, help='Comma-separated list of indices, e.g. --list=9,18,202')
     parser.add_argument('--template', type=str, help='YAML template for OpenAI query')
-    parser.add_argument('--run', type=bool, default=False, help='Run the query indicated by the template and input file')
-    parser.add_argument('--loop', type=bool, default=False, help='Run the query indicated by the template and input file')
+    parser.add_argument('--run', action='store_true', help='Run the query indicated by the template and input file')
+    parser.add_argument('--loop', action='store_true', help='Run the query indicated by the template and input file')
     parser.add_argument('--standalone', type=str, help='Execute an API query entirely from the provided yaml file')
     args = parser.parse_args()
 
