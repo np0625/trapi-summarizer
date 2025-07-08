@@ -10,8 +10,20 @@ To use this module, you must provide your own OpenAI API key.
 
 ## How to install
 
-- `$ make install` or create the dirs `dependencies` and `data` by hand in the project's top level dir
-- Obtain the graphwerks and openai_lib packages by asking the author (these will be published on PyPI at some point)
-  and place them in dependencies
+- Create the dirs `dependencies` and `data` by hand in the project's top level dir
+- Obtain the `graphwerks` and `openai_lib` packages by asking the author (these will be published on PyPI at some point)
+  and place them in `dependencies/`
 - `$ make install`
+
+## How to use
+
+- `$ export OPENAI_KEY='<your openai key>'`
+  - Note that to use o3, you must have verified your account
+- `$ python driver.py -i <pk | path to file> --list N1,N2,N3 --template <path to yaml config> [--loop | --run]`
+  - `-i <pk | path to file>`: If the PK of a pre-run query is provided, it will first be downloaded to a file
+    in `data/`. If a file name is provided, it must be valid JSON conforming to a TRAPI Response message.
+  - `--list n1[,n2,n3]`: 0-based indices of elements of the TRAPI `response` array to summarize.
+  - `--template <yaml file>`: A file providing parameters for the OpenAI Responses API call. See `yaml/` for examples
+  - `--loop`: Provide this when your API call contains a tool-calling loop
+  - `--run`: Provide this when your API call doesn't use tools and will produce a single response
 
