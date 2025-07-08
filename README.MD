@@ -8,3 +8,10 @@ It produces a markdown-based preliminary file that collects the relevant data fr
 
 To use this module, you must provide your own OpenAI API key.
 
+## How to install
+
+- `$ make install` or create the dirs `dependencies` and `data` by hand in the project's top level dir
+- Obtain the graphwerks and openai_lib packages by asking the author (these will be published on PyPI at some point)
+  and place them in dependencies
+- `$ make install`
+
