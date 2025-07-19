@@ -96,11 +96,9 @@ def main():
                                                input=kg_summary)
         print(resp)
     elif (args.loop):
+        print(kg_summary)
         resp = client.run_as_loop(kg_summary, template, handle_fun_call)
-        # print(resp)
-        print(resp.output_text)
-
-
+        print(resp)
     else:
         print(kg_summary)
         print(json.dumps(template, indent=2))
