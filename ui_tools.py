@@ -27,8 +27,9 @@ def create_ui_presummary(payload, idx):
     node_collection = []
     for p_id in paths:
         collect_edges_for_path(p_id, orig_paths, orig_edges, edge_collection)
-    result_elem['edges'] = edge_collection
     result_elem['nodes'] = collect_nodes_for_edge_collection(orig_nodes, edge_collection, node_collection)
+    replace_curies_with_names(edge_collection, orig_nodes)
+    result_elem['edges'] = edge_collection
     return result_elem
 
 def flatten_publication_info(pubinfo: dict) -> list:
@@ -69,6 +70,11 @@ def collect_nodes_for_edge_collection(orig_nodes, edge_collection, node_collecti
         }
         node_collection.append(new_node)
     return node_collection
+
+def replace_curies_with_names(edge_collection, orig_nodes):
+    for e in edge_collection:
+        e['subject_name'] = orig_nodes[e['subject_name']]['names'][0]
+        e['object_name'] = orig_nodes[e['object_name']]['names'][0]
 
 if __name__ == "__main__":
     import json
