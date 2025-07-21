@@ -3,7 +3,7 @@ import argparse
 import os
 from graphwerk import trapimsg
 import summarizer_tools as st
-import base_summarizer as summarizer
+import trapi_summarizer as summarizer
 import openai_lib
 import sys
 from pubmed_client import get_publication_info
