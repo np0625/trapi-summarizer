@@ -1,8 +1,8 @@
 import jq
 import json
-import summarizer_tools as st
+from . import trapi_tools as tools
 from graphwerk import trapimsg
-import utils
+from . import utils
 
 def summarize_trapi_response(trapi_response_msg: dict, idx_range: range, pub_cutoff=5) -> str:
     orig_msg = trapi_response_msg['fields']['data']['message']
@@ -10,7 +10,7 @@ def summarize_trapi_response(trapi_response_msg: dict, idx_range: range, pub_cut
     orig_ag = orig_msg['auxiliary_graphs']
     orig_qg = orig_msg['query_graph']
     retval = ''
-    object_node_id, object_node_data = st.get_object_node_data(orig_qg, orig_kg)
+    object_node_id, object_node_data = tools.get_object_node_data(orig_qg, orig_kg)
     query_summmary = create_query_summary(object_node_id, object_node_data)
     res_nodes = {} # The node section is universal, not per-result
 
@@ -25,8 +25,8 @@ def summarize_trapi_response(trapi_response_msg: dict, idx_range: range, pub_cut
         res_sgs = {}
         trapimsg.collect_edges_and_sgs_for_res_elem(cur_res, orig_kg, orig_ag, res_edges, res_sgs)
         trapimsg.collect_nodes_for_edge_collection(res_edges, orig_kg, res_nodes)
-        presum_edges = st.create_edge_presummary_raw_data(res_edges, res_nodes, pub_cutoff)
-        presum_nodes = st.create_node_presummary_raw_data(res_nodes)
+        presum_edges = tools.create_edge_presummary_raw_data(res_edges, res_nodes, pub_cutoff)
+        presum_nodes = tools.create_node_presummary_raw_data(res_nodes)
         per_result += utils.create_edge_data_summary(presum_edges, 1) + '\n'
         counter += 1
 

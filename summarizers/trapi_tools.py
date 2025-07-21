@@ -2,7 +2,7 @@ import re
 import jq
 from graphwerk import trapimsg
 import jq_tools
-import utils
+from . import utils
 
 """Get node data for the CURIE identified by the QG as the object of the query
 """
