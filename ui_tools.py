@@ -86,5 +86,6 @@ if __name__ == "__main__":
     with open(sys.argv[1], 'r') as f:
         infile =json.load(f)
     idx = int(sys.argv[2])
+    infile['disease'] = 'MONDO:0005147'
     print(json.dumps((create_ui_presummary(infile, idx))))
 
