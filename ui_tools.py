@@ -46,8 +46,12 @@ def collect_edges_for_path(path_id, orig_paths, orig_edges, edge_collection=[], 
     sg = orig_paths[path_id]['subgraph']
     for edge_id in sg[1::2]: # Every other element starting at idx=1 gives you just the edges
         edge_info = _edge_jq_expr.input_value(orig_edges[edge_id]).first()
-        edge_info['publications'] = flatten_publication_info(edge_info['publications'])[:pub_cutoff]
-        edge_collection.append(edge_info)
+        edge_collection.append({
+            'subject_name': edge_info['subject'],
+            'object_name': edge_info['object'],
+            'predicate': edge_info['predicate'],
+            'pub_ids': flatten_publication_info(edge_info['publications'])[:pub_cutoff]
+        })
         for p_id in edge_info['support']:
             collect_edges_for_path(p_id, orig_paths, orig_edges, edge_collection)
     return edge_collection
@@ -55,8 +59,8 @@ def collect_edges_for_path(path_id, orig_paths, orig_edges, edge_collection=[], 
 def collect_nodes_for_edge_collection(orig_nodes, edge_collection, node_collection=[], category_cutoff=5):
     curies = set()
     for e in edge_collection:
-        subject_curie = e['subject']
-        object_curie = e['object']
+        subject_curie = e['subject_name']
+        object_curie = e['object_name']
         curies.add(subject_curie)
         curies.add(object_curie)
 
