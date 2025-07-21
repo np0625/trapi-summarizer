@@ -27,7 +27,7 @@ def summarize_trapi_response(trapi_response_msg: dict, idx_range: range, pub_cut
         trapimsg.collect_nodes_for_edge_collection(res_edges, orig_kg, res_nodes)
         presum_edges = st.create_edge_presummary_raw_data(res_edges, res_nodes, pub_cutoff)
         presum_nodes = st.create_node_presummary_raw_data(res_nodes)
-        per_result += create_edge_data_summary(presum_edges) + '\n'
+        per_result += create_edge_data_summary(presum_edges, 1) + '\n'
         counter += 1
 
     return f"""{query_summmary}
@@ -52,9 +52,9 @@ def create_node_data_summary(node_presummaries: list[dict]) -> str:
     return retval;
 
 
-def create_edge_data_summary(edge_presummaries: list[dict]) -> str:
+def create_edge_data_summary(edge_presummaries: list[dict], skip=0) -> str:
     retval = '| <SUBJECT> | <PREDICATE> | <OBJECT> | <PUBMED IDS> |\n'
-    for e in edge_presummaries[1:]: # Try skipping the first element, which is the main "treats" edge
+    for e in edge_presummaries[skip:]: # (Sometimes) try skipping the first element, which is the main "treats" edge
         retval += f"| {e['subject_name']} | {re.sub(r"^biolink:", '', e['predicate'])} | {e['object_name']} | "
         retval += ",".join(e['pub_ids']) + " |\n"
     return retval
