@@ -2,6 +2,7 @@ import re
 import jq
 from graphwerk import trapimsg
 import jq_tools
+import utils
 
 """Get node data for the CURIE identified by the QG as the object of the query
 """
@@ -49,16 +50,11 @@ def create_edge_presummary_raw_data(edges: list[dict], node_collection: dict, pu
         for edge in uniq
     ]
 
-def sanitize_categories(cats: list) -> list:
-    eliminate = ('biolink:NamedThing', 'biolink:BiologicalEntity', 'biolink:ThingWithTaxon',
-                   'biolink:PhysicalEssence', 'biolink:PhysicalEssenceOrOccurrent')
-    return [cat for cat in cats if cat not in eliminate]
-
 def create_node_presummary_raw_data(nodes: list[dict], category_cutoff=5) -> list[dict]:
     return [
         {
             'name': val['name'],
-            'categories': sanitize_categories(val.get('categories', []))[:category_cutoff],
+            'categories': utils.sanitize_categories(val.get('categories', []))[:category_cutoff],
             'curie': key
         } for key, val in nodes.items()
     ]
