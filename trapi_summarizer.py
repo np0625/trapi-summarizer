@@ -1,8 +1,8 @@
-import re
 import jq
 import json
 import summarizer_tools as st
 from graphwerk import trapimsg
+import utils
 
 def summarize_trapi_response(trapi_response_msg: dict, idx_range: range, pub_cutoff=5) -> str:
     orig_msg = trapi_response_msg['fields']['data']['message']
@@ -27,12 +27,12 @@ def summarize_trapi_response(trapi_response_msg: dict, idx_range: range, pub_cut
         trapimsg.collect_nodes_for_edge_collection(res_edges, orig_kg, res_nodes)
         presum_edges = st.create_edge_presummary_raw_data(res_edges, res_nodes, pub_cutoff)
         presum_nodes = st.create_node_presummary_raw_data(res_nodes)
-        per_result += create_edge_data_summary(presum_edges, 1) + '\n'
+        per_result += utils.create_edge_data_summary(presum_edges, 1) + '\n'
         counter += 1
 
     return f"""{query_summmary}
 
-{create_node_data_summary(presum_nodes)}
+{utils.create_node_data_summary(presum_nodes)}
 
 * EDGE/REASONING INFORMATION (KNOWLEDGE GRAPHS)
 
@@ -42,22 +42,6 @@ provides the associated reasoning/knowledge graph.
 {per_result.rstrip()}
 """
 
-
-def create_node_data_summary(node_presummaries: list[dict]) -> str:
-    retval = """* NODE INFORMATION
-
-| <ENTITY NAME> | <CATEGORIES> | <CURIE> |\n"""
-    for n in node_presummaries:
-        retval += f"| {n['name']} | {", ".join(re.sub(r"^biolink:", "", a) for a in n['categories'])} | {n['curie']} |\n"
-    return retval;
-
-
-def create_edge_data_summary(edge_presummaries: list[dict], skip=0) -> str:
-    retval = '| <SUBJECT> | <PREDICATE> | <OBJECT> | <PUBMED IDS> |\n'
-    for e in edge_presummaries[skip:]: # (Sometimes) try skipping the first element, which is the main "treats" edge
-        retval += f"| {e['subject_name']} | {re.sub(r"^biolink:", '', e['predicate'])} | {e['object_name']} | "
-        retval += ",".join(e['pub_ids']) + " |\n"
-    return retval
 
 def create_query_summary(object_id: str, object_data: dict) -> str:
     jqprog = jq.compile('.attributes[] | select(.attribute_type_id == "biothings_annotations") | .value[0].disease_ontology.def')
