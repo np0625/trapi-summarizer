@@ -13,12 +13,8 @@ _edge_fields = ('support', 'subject', 'predicate', 'object', 'publications')
 _edge_jq_expr = jq.compile(f"{{ {','.join(_edge_fields)} }}")
 
 
-with open(sys.argv[1], 'r') as f:
-    infile =json.load(f)
 
-idx = int(sys.argv[2])
-
-def shrink_ui_payload(payload, idx):
+def create_ui_presummary(payload, idx):
     retval = {}
     data = payload['data']
     orig_results = data['results']
@@ -74,5 +70,9 @@ def collect_nodes_for_edge_collection(orig_nodes, edge_collection, node_collecti
         node_collection.append(new_node)
     return node_collection
 
-print(json.dumps((shrink_ui_payload(infile, idx))))
+if __name__ == "__main__":
+    with open(sys.argv[1], 'r') as f:
+        infile =json.load(f)
+    idx = int(sys.argv[2])
+    print(json.dumps((create_ui_presummary(infile, idx))))
 
