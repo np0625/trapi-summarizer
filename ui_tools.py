@@ -1,6 +1,4 @@
 import jq
-import json
-import sys
 import utils
 
 _result_fields = ('id', 'subject', 'drug_name', 'paths')
@@ -14,6 +12,8 @@ _edge_jq_expr = jq.compile(f"{{ {','.join(_edge_fields)} }}")
 
 
 
+# Note: for now this assumes creating a single element summary.
+# This is different from the trapi_summarizer which can summarize a range of result elements
 def create_ui_presummary(payload, idx):
     retval = {}
     data = payload['data']
@@ -71,6 +71,8 @@ def collect_nodes_for_edge_collection(orig_nodes, edge_collection, node_collecti
     return node_collection
 
 if __name__ == "__main__":
+    import json
+    import sys
     with open(sys.argv[1], 'r') as f:
         infile =json.load(f)
     idx = int(sys.argv[2])
