@@ -25,6 +25,10 @@ def create_ui_presummary(payload, idx):
     paths = result_elem['paths']
     edge_collection = []
     node_collection = []
+    # The ordering of the following 3 operations is important:
+    # First collect all the edges, storing the curies for subject/object in the [subject|object]_name field
+    # Then collect all the node info for those subjects/objects
+    # THEN replace the curies with their names in the edge data
     for p_id in paths:
         collect_edges_for_path(p_id, orig_paths, orig_edges, edge_collection)
     result_elem['nodes'] = collect_nodes_for_edge_collection(orig_nodes, edge_collection, node_collection)
