@@ -1,5 +1,5 @@
 import jq
-import utils
+from . import utils
 
 _result_fields = ('id', 'subject', 'drug_name', 'paths')
 _result_jq_expr = jq.compile(f"{{ {','.join(_result_fields)} }}")
