@@ -85,6 +85,7 @@ def create_ui_presummary(payload, idx):
     retval['disease'] = disease_curie
     retval['disease_description'] = data['disease_description']
     retval['disease_name'] = data['disease_name']
+    retval['drug_name'] = result_elem['drug_name']
     return retval
 
 def flatten_publication_info(pubinfo: dict) -> list:

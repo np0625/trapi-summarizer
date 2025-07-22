@@ -16,6 +16,8 @@ def create_ui_summary(payload, idx):
 Each item below specifies a biological entity that is claimed to treat the disease referred to in the query, and
 provides the associated reasoning/knowledge graph.
 
+** Result: {presummary['drug_name']}
+
 {edge_summary}
 """
 
