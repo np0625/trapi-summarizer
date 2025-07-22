@@ -17,13 +17,16 @@ Each item below specifies a biological entity that is claimed to treat the disea
 provides the associated reasoning/knowledge graph.
 
 {edge_summary}
-
 """
 
 def create_query_summary(payload):
-    disease_curie = payload['disease']
-    disease_name = payload['data']['nodes'][disease_curie]['names'][0]
-    disease_def = payload['data']['nodes'][disease_curie]['descriptions'][0]
+    if 'data' in payload:
+        data = payload['data']
+    else:
+        data = payload
+    disease_curie = data['disease']
+    disease_name = data['disease_name']
+    disease_def = data['disease_description']
     if disease_def:
         disease_def = f"A brief definition of this disease: {disease_def}"
     retval = f"""* QUERY INFORMATION
@@ -39,5 +42,6 @@ if __name__ == "__main__":
     with open(sys.argv[1], 'r') as f:
         infile =json.load(f)
     idx = int(sys.argv[2])
-    infile['disease'] = 'MONDO:0005147'
-    print(create_ui_summary(infile, idx))
+    # infile['disease'] = 'MONDO:0005147'
+    target = ui_tools.shrink_payload(infile, idx)
+    print(create_ui_summary(target, 0))

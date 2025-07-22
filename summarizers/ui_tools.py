@@ -1,22 +1,69 @@
 import jq
 from . import utils
 
-_result_fields = ('id', 'subject', 'drug_name', 'paths')
+_result_fields = ('id', 'subject', 'object', 'drug_name', 'paths')
 _result_jq_expr = jq.compile(f"{{ {','.join(_result_fields)} }}")
 
-_node_fields = ('types')
+_node_fields = ('names', 'types')
 _node_jq_expr = jq.compile(f"{{ {','.join(_node_fields)} }}")
 
 _edge_fields = ('support', 'subject', 'predicate', 'object', 'publications')
 _edge_jq_expr = jq.compile(f"{{ {','.join(_edge_fields)} }}")
 
+_path_fields = ('subgraph',)
+_path_jq_expr = jq.compile(f"{{ {','.join(_path_fields)} }}")
+
+def shrink_payload(payload, idx):
+    retval = {}
+    data = payload['data']
+    orig_results = data['results']
+    orig_paths = data['paths']
+    orig_nodes = data['nodes']
+    orig_edges = data['edges']
+    result_elem = _result_jq_expr.input_value(orig_results[idx]).first()
+    disease_curie = result_elem['object']
+    retval['disease'] = disease_curie
+    retval['disease_description'] = orig_nodes[disease_curie]['descriptions'][0]
+    retval['disease_name'] = orig_nodes[disease_curie]['names'][0]
+    retval['results'] = [result_elem]
+    retval['paths'] = {}
+    retval['nodes'] = {}
+    retval['edges'] = {}
+    path_copy = result_elem['paths'][:] # Fancy python shallow copy
+    shrink_payload_aux(payload, path_copy, retval)
+    return retval
+
+def shrink_payload_aux(payload, paths, retval):
+    if len(paths) == 0:
+        return
+
+    data = payload['data']
+    orig_paths = data['paths']
+    orig_nodes = data['nodes']
+    orig_edges = data['edges']
+    p = paths.pop(0)
+    retval['paths'][p] = _path_jq_expr.input_value(orig_paths[p]).first()
+    is_node = True
+    for elem in retval['paths'][p]['subgraph']:
+        if is_node:
+            if elem not in retval['nodes']:
+                retval['nodes'][elem] = _node_jq_expr.input_value(orig_nodes[elem]).first()
+        else:
+            if elem not in retval['edges']:
+                retval['edges'][elem] = _edge_jq_expr.input_value(orig_edges[elem]).first()
+                paths = paths + retval['edges'][elem]['support']
+        is_node = not is_node
+    shrink_payload_aux(payload, paths, retval)
 
 
 # Note: for now this assumes creating a single element summary.
 # This is different from the trapi_summarizer which can summarize a range of result elements
 def create_ui_presummary(payload, idx):
     retval = {}
-    data = payload['data']
+    if 'data' in payload:
+        data = payload['data']
+    else:
+        data = payload
     orig_results = data['results']
     orig_paths = data['paths']
     orig_nodes = data['nodes']
@@ -31,10 +78,14 @@ def create_ui_presummary(payload, idx):
     # THEN replace the curies with their names in the edge data
     for p_id in paths:
         collect_edges_for_path(p_id, orig_paths, orig_edges, edge_collection)
-    result_elem['nodes'] = collect_nodes_for_edge_collection(orig_nodes, edge_collection, node_collection)
+    retval['nodes'] = collect_nodes_for_edge_collection(orig_nodes, edge_collection, node_collection)
     replace_curies_with_names(edge_collection, orig_nodes)
-    result_elem['edges'] = edge_collection
-    return result_elem
+    retval['edges'] = edge_collection
+    disease_curie = data['disease']
+    retval['disease'] = disease_curie
+    retval['disease_description'] = data['disease_description']
+    retval['disease_name'] = data['disease_name']
+    return retval
 
 def flatten_publication_info(pubinfo: dict) -> list:
     retval = []
@@ -86,6 +137,9 @@ if __name__ == "__main__":
     with open(sys.argv[1], 'r') as f:
         infile =json.load(f)
     idx = int(sys.argv[2])
-    infile['disease'] = 'MONDO:0005147'
-    print(json.dumps((create_ui_presummary(infile, idx))))
+    # infile['disease'] = 'MONDO:0005147'
+    # print(json.dumps((create_ui_presummary(infile, idx))))
+    shrink = shrink_payload(infile, idx)
+    print(json.dumps(shrink))
+    print(json.dumps(create_ui_presummary(shrink, 0)))
 
