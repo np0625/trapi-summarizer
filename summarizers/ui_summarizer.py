@@ -1,10 +1,10 @@
 from . import ui_tools
-from . import utils
+from . import common_utils as cu
 
 def create_ui_summary(payload, idx):
     presummary = ui_tools.create_ui_presummary(payload, idx)
-    node_summary = utils.create_node_data_summary(presummary['nodes'])
-    edge_summary = utils.create_edge_data_summary(presummary['edges'], 1)
+    node_summary = cu.create_node_data_summary(presummary['nodes'])
+    edge_summary = cu.create_edge_data_summary(presummary['edges'], 1)
 
     return f"""{create_query_summary(payload)}
 

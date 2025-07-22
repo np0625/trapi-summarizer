@@ -2,7 +2,7 @@ import jq
 import json
 from . import trapi_tools as tools
 from graphwerk import trapimsg
-from . import utils
+from . import common_utils as cu
 
 def summarize_trapi_response(trapi_response_msg: dict, idx_range: range, pub_cutoff=5) -> str:
     orig_msg = trapi_response_msg['fields']['data']['message']
@@ -27,12 +27,12 @@ def summarize_trapi_response(trapi_response_msg: dict, idx_range: range, pub_cut
         trapimsg.collect_nodes_for_edge_collection(res_edges, orig_kg, res_nodes)
         presum_edges = tools.create_edge_presummary_raw_data(res_edges, res_nodes, pub_cutoff)
         presum_nodes = tools.create_node_presummary_raw_data(res_nodes)
-        per_result += utils.create_edge_data_summary(presum_edges, 1) + '\n'
+        per_result += cu.create_edge_data_summary(presum_edges, 1) + '\n'
         counter += 1
 
     return f"""{query_summmary}
 
-{utils.create_node_data_summary(presum_nodes)}
+{cu.create_node_data_summary(presum_nodes)}
 
 * EDGE/REASONING INFORMATION (KNOWLEDGE GRAPHS)
 

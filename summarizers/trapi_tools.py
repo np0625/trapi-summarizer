@@ -2,7 +2,7 @@ import re
 import jq
 from graphwerk import trapimsg
 import jq_tools
-from . import utils
+from . import common_utils as cu
 
 """Get node data for the CURIE identified by the QG as the object of the query
 """
@@ -54,7 +54,7 @@ def create_node_presummary_raw_data(nodes: list[dict], category_cutoff=5) -> lis
     return [
         {
             'name': val['name'],
-            'categories': utils.sanitize_categories(val.get('categories', []))[:category_cutoff],
+            'categories': cu.sanitize_categories(val.get('categories', []))[:category_cutoff],
             'curie': key
         } for key, val in nodes.items()
     ]

@@ -1,5 +1,5 @@
 import jq
-from . import utils
+from . import common_utils as cu
 
 _result_fields = ('id', 'subject', 'object', 'drug_name', 'paths')
 _result_jq_expr = jq.compile(f"{{ {','.join(_result_fields)} }}")
@@ -119,7 +119,7 @@ def collect_nodes_for_edge_collection(orig_nodes, edge_collection, node_collecti
     for c in curies:
         orig_node = orig_nodes[c]
         new_node = {
-            'categories': utils.sanitize_categories(orig_node.get('types', []))[:category_cutoff],
+            'categories': cu.sanitize_categories(orig_node.get('types', []))[:category_cutoff],
             'name': orig_node['names'][0],
             'curie': c
         }
