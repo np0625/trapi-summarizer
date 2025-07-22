@@ -5,9 +5,9 @@ from graphwerk import trapimsg
 from summarizers import trapi_summarizer as summarizer
 import openai_lib
 import sys
-from pubmed_client import get_publication_info
 import ars_client
 import uuid
+import llm_utils
 
 def is_pk(value: str) -> bool:
     try:
@@ -60,17 +60,6 @@ def get_index_range(args) -> tuple[int, ...] | range:
     else:
         return range(args.start, args.end + 1)
 
-def handle_fun_call(fun_name: str, args=str):
-    retval = ''
-    if fun_name == 'get_publication_info':
-        arg_dict = json.loads(args)
-        pub_ids = arg_dict['pubids'].split(',')
-        retval = json.dumps(get_publication_info(pub_ids, arg_dict['request_id']))
-    else:
-        print(f"WARNING: did not recognize #{fun_name} as a valid tool to call")
-
-    return retval
-
 
 def main():
     client = openai_lib.OpenAIClient(os.environ['OPENAI_KEY'])
@@ -96,7 +85,7 @@ def main():
         print(resp)
     elif (args.loop):
         print(kg_summary)
-        resp = client.run_as_loop(kg_summary, template, handle_fun_call)
+        resp = client.run_as_loop(kg_summary, template, llm_utils.handle_fun_call)
         print(resp)
     else:
         print(kg_summary)
