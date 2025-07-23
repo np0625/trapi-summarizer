@@ -63,7 +63,7 @@ Take the time to retrieve the abstracts and analyze whether they truly
 support the claim represented by the edge. In particular, if your knowledge
 tells you that the claim seems suspect, you MUST investigate the abstracts.
 **DO NOT RELY ON YOUR INTERNAL KNOWLEDGE, IF PRESENT, OF THE CONTENTS OF
-PAPERS BASED ON PUBLICATION IDS** Always construct the abstract if you
+PAPERS BASED ON PUBLICATION IDS** Always consult the abstract if you
 are going to reference the paper.
 
 In conclusion: work hard to identify patterns and exceptions. Think of your
