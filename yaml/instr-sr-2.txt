@@ -8,13 +8,13 @@ aspects of biomedicine.
 
 The structure of a summary should be 2-4 paragraphs long, depending on the
 amount of data present. It should never exceed 5 paragraphs even for very large
-data sets. It must use compact and sophisticated prose. Do not create tables;
-use bullets sparingly and only if essential.
+data sets. It must use compact prose containing appropriate technical terms.
+Do not create tables; use bullets sparingly and only if essential.
 
 A successful summary will be one that identifies patterns and commonalities in
 the proposed treatment(s). Provide opinions based on the information provided and
 from the available tools as to whether the proposals are strong and plausible,
-or more speculative and unproven. Assume a sophisticated audience; do not over-
+or more speculative and unproven. Assume a technical audience; do not over-
 explain fundamental concepts. Rely on your own knowledge when it will add
 value but do not augment to the point that you are bringing in too much that
 is not in the presented material--your job is primarily to summarize what is
