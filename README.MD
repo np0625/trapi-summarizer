@@ -24,10 +24,10 @@ To use this module, you must provide your own OpenAI API key.
     in `data/`. If a file name is provided, it must be valid JSON conforming to a TRAPI Response message.
   - `--list n1[,n2,n3]`: 0-based indices of elements of the TRAPI `response` array to summarize.
   - `--template <yaml file>`: A file providing parameters for the OpenAI Responses API call. See `yaml/` for examples
-  - `--loop`: Provide this when your API call contains a tool-calling loop (non-streaming)
   - `--run`: Provide this when your API call doesn't use tools and will produce a single response
-  - `--stream`: Provide this to retrieve streaming results (only used with tool-calling loops)
-  - `--chunk N`: Number of tokens of streaming textual output to collect before yielding output to the caller
+  - `--loop`: Provide this when your API call contains a tool-calling loop (non-streaming)
+  - `--stream`: Provide this to retrieve streaming results from a tool-calling loop
+  - `--chunk N`: Number of tokens of streaming textual output to collect before yielding output to the caller (default 10)
 
-If you provide neither of --loop or --run, the program will print the query request payload and exit without
-submitting it.
+If you provide none of `--loop`, `--run`, or `--stream`, the program will print the query request payload and exit without
+submitting it to OpenAI.
