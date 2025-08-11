@@ -5,7 +5,7 @@ reasoning:
 tools:
   - type: function
     name: get_publication_info
-    description: retrieve abstract, author, and article title and dates for a given comma-separated list of publication IDs
+    description: retrieve abstracts, authors, and article titles and dates for a given comma-separated list of publication IDs
     parameters:
       type: object
       properties:
