@@ -34,7 +34,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--list', type=str, help='Comma-separated list of indices, e.g. --list=9,18,202')
     parser.add_argument('--template', type=str, help='YAML template for OpenAI query')
     parser.add_argument('--run', action='store_true', help='Run the query indicated by the template and input file')
-    parser.add_argument('--loop', action='store_true', help='Run the query indicated by the template and input file')
+    parser.add_argument('--loop', action='store_true', help='Run the query indicated by the template and input file in a tool-calling loop')
+    parser.add_argument('--stream', action='store_true', help='Stream results from the query indicated by the template and input file (also runs as a tool-calling loop)')
+    parser.add_argument('--chunk', type=int, default=10, help='Number of tokens of textual output to collect from the model output stream before pushing to the caller')
     parser.add_argument('--standalone', type=str, help='Execute an API query entirely from the provided yaml file')
     args = parser.parse_args()
 
@@ -86,8 +88,12 @@ async def main():
         print(resp)
     elif (args.loop):
         print(kg_summary)
+        resp = await client.run_as_loop(kg_summary, template, llm_utils.handle_fun_call)
+        print(resp)
+    elif (args.stream):
+        print(kg_summary)
         async for event in client.run_as_loop_streaming(kg_summary, template, llm_utils.handle_fun_call,
-                                                        1, None, 10, 8):
+                                                        1, None, 10, args.chunk):
             print(event)
     else:
         print(kg_summary)
