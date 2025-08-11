@@ -1,6 +1,6 @@
 import httpx
 
-def get_publication_info(pubids: list[str], request_id: str, timeout: float=4.0) -> dict:
+async def get_publication_info(pubids: list[str], request_id: str, timeout: float=4.0) -> dict:
     """
     Fetch publication information from the docmetadata.transltr.io API.
 
@@ -36,8 +36,8 @@ def get_publication_info(pubids: list[str], request_id: str, timeout: float=4.0)
     }
 
     try:
-        with httpx.Client(timeout=timeout) as client:
-            response = client.get(url, params=params)
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            response = await client.get(url, params=params)
             response.raise_for_status()  # Raise an exception for HTTP error status codes
             return response.json()
     except httpx.TimeoutException:
@@ -49,4 +49,5 @@ def get_publication_info(pubids: list[str], request_id: str, timeout: float=4.0)
 
 
 if __name__ == "__main__":
-    print(get_pub_info(('PMID:36008391','PMID:36008392','PMC8959199','not_an_id'), 'bob'))
+    import asyncio
+    print(asyncio.run(get_publication_info(('PMID:36008391','PMID:36008392','PMC8959199','not_an_id'), 'bob')))

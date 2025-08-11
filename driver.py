@@ -8,6 +8,7 @@ import sys
 import ars_client
 import uuid
 import llm_utils
+import asyncio
 
 def is_pk(value: str) -> bool:
     try:
@@ -61,13 +62,13 @@ def get_index_range(args) -> tuple[int, ...] | range:
         return range(args.start, args.end + 1)
 
 
-def main():
+async def main():
     client = openai_lib.OpenAIClient(os.environ['OPENAI_KEY'])
     args = parse_args()
     if (args.standalone):
         expanded = openai_lib.expand_yaml_template(args.standalone, ('model', 'instructions', 'input'))
         print(expanded)
-        resp = client.responses.create(**expanded)
+        resp = await client.responses.create(**expanded)
         print(resp)
         sys.exit(0)
 
@@ -79,18 +80,19 @@ def main():
         template = openai_lib.expand_yaml_template(args.template, ('instructions',))
 
     if (args.run):
-        resp = client._client.responses.create(**template['params'],
+        resp = await client.responses.create(**template['params'],
                                                instructions=template['instructions'],
                                                input=kg_summary)
         print(resp)
     elif (args.loop):
         print(kg_summary)
-        resp = client.run_as_loop(kg_summary, template, llm_utils.handle_fun_call)
-        print(resp)
+        async for event in client.run_as_loop_streaming(kg_summary, template, llm_utils.handle_fun_call,
+                                                        1, None, 10, 8):
+            print(event)
     else:
         print(kg_summary)
         print(json.dumps(template, indent=2))
 
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())

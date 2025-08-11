@@ -1,0 +1,8 @@
+params:
+  model: o3
+  reasoning:
+    effort: high
+    summary: detailed
+instructions: !file instr-sr-2.txt
+
+
