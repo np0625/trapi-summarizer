@@ -3,6 +3,7 @@ import argparse
 import os
 from graphwerk import trapimsg
 from summarizers import trapi_summarizer as summarizer
+from summarizers import gene_nmf_utils as g_utils
 import openai_lib
 import sys
 import ars_client
@@ -78,7 +79,8 @@ async def main():
     # 1 - parse out trapi and get genes
     # 2 - get gene nmf call with gene list input
     # 3 - get lists of gene set factors (could be list of gene set lists)
-    # 4 - call LLM with input of factors/gene sets
+    # 4 - package data into LLM query input
+    # 5 - call LLM with input of factors/gene sets
 
     orig = load_trapi_response(args.input)
     idx_range = get_index_range(args)
