@@ -75,16 +75,19 @@ async def main():
         print(resp)
         sys.exit(0)
 
-    # sequence
+
+    orig = load_trapi_response(args.input)
+    idx_range = get_index_range(args)
+    # kg_summary = summarizer.summarize_trapi_response(orig, idx_range, 8)
+
+    # sequence to build the kg_summary (in the utils file)
     # 1 - parse out trapi and get genes
     # 2 - get gene nmf call with gene list input
     # 3 - get lists of gene set factors (could be list of gene set lists)
     # 4 - package data into LLM query input
     # 5 - call LLM with input of factors/gene sets
+    kg_summary = g_utils.generate_kg_summary_from_trapi_result(json_trapi_result=orig)
 
-    orig = load_trapi_response(args.input)
-    idx_range = get_index_range(args)
-    kg_summary = summarizer.summarize_trapi_response(orig, idx_range, 8)
 
     if (args.template):
         template = openai_lib.expand_yaml_template(args.template, ('instructions',))
@@ -102,10 +105,14 @@ async def main():
     # DEMO THIS ONE
     elif (args.stream):
         print(kg_summary)
+        event_final = ''
         async for event in client.run_as_loop_streaming(kg_summary, template, llm_utils.handle_fun_call,
                                                         1, None, 10, args.chunk):
+            event_final = event
             print(event)
-            
+        print("\n\nFINAL: {}".format(event_final.get('output_text', '')))
+
+
     else:
         print(kg_summary)
         print(json.dumps(template, indent=2))
