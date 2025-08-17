@@ -8,7 +8,8 @@ import requests
 
 # constants
 URL_NMF = "https://translator.broadinstitute.org/genetics_provider/bayes_gene/pigean"
-KEY_NMF_PIGEAN_FACTORS = "pigean_factor"
+KEY_NMF_PIGEAN_FACTORS = "pigean-factor"
+KEY_NMF_DATA = "data"
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -82,12 +83,13 @@ def get_gene_set_groupings_from_nmf(json_nmf, log=False):
     will parse a valid nmf json and return a list of gene set groupings (by factor)
     '''
     # initialize
-    list_result = []
+    map_factor_gene_sets = {}
 
     # get gene list from the nmf json
+    map_factor_gene_sets = {item["factor"]: item.get("top_gene_sets", '').split(";") for item in json_nmf.get(KEY_NMF_PIGEAN_FACTORS, {}).get(KEY_NMF_DATA, [])}
 
     # return
-    return list_result
+    return map_factor_gene_sets
 
 
 def get_result_nodes(json_data, log=False):
@@ -142,6 +144,11 @@ if __name__ == "__main__":
     # test the NMF service
     json_nmf_result = call_nmf_service(url=URL_NMF, list_genes=list_genes)
     print(json.dumps(json_nmf_result, indent=2))
+
+    # extract the gene set groupings
+    map_gene_set_groupings = get_gene_set_groupings_from_nmf(json_nmf=json_nmf_result)
+    print(json.dumps(map_gene_set_groupings, indent=2))
+
 
 
 
