@@ -98,11 +98,14 @@ async def main():
         print(kg_summary)
         resp = await client.run_as_loop(kg_summary, template, llm_utils.handle_fun_call)
         print(resp)
+
+    # DEMO THIS ONE
     elif (args.stream):
         print(kg_summary)
         async for event in client.run_as_loop_streaming(kg_summary, template, llm_utils.handle_fun_call,
                                                         1, None, 10, args.chunk):
             print(event)
+            
     else:
         print(kg_summary)
         print(json.dumps(template, indent=2))

@@ -13,7 +13,7 @@ data sets. It must use compact and sophisticated prose. Do not create tables;
 use bullets sparingly and only if essential.
 
 A successful summary will be one that identifies patterns and commonalities in
-the gene set groups. Provide opinions based on the information provided and
+each gene set group. Provide opinions based on the information provided and
 from the available tools as to whether the proposals are strong and plausible,
 or more speculative and unproven. Assume a sophisticated audience; do not over-
 explain fundamental concepts. Rely on your own knowledge when it will add
@@ -31,15 +31,11 @@ This section will briefly present the question being asked, which will be of
 the form "What biological processes are impacting X" where X is a disease or a disease-like
 entity. A brief description of the disease may be provided.
 
-2. Node/Entity information
+2. Gene set information
 
-This section will provide an index of all the genes linked to the disease used to compute the gene set groupings
-
-3. Gene set information
-
-This section will be a list of results, each of which consists
-a list of enriched gene sets grouped by non negative matrix factors;
-each factor group should correspong to a latent common biological process
+This section will be a json map of results, each of which consists
+a list of enriched gene sets grouped by non negative matrix latent factors;
+each factor group should correspond to a latent common biological process
 
 In conclusion: work hard to identify patterns and exceptions. Think of your
 summary as the opening to a literature review, where you are providing a guide

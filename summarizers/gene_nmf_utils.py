@@ -116,6 +116,56 @@ def pretty_print_json(json_data, num_lines, log=False):
         print(line)
 
 
+def build_kg_llm_summary(name_disease, map_gene_set_groupings, log=False):
+    '''
+    generate the LLM text that will be returned to the LLM calling driver
+    '''
+    # initialize
+    str_template = """
+* QUERY INFORMATION
+
+The following data is a derived from a response to the query: "What drugs may treat the disease: '{}'.
+
+* GENE SET GROUPINGS BY FACTOR: 
+
+Each item below specifies a latent factor grouping of biological gene sets.
+
+{}
+    """
+    str_result = ""
+
+    # generate
+    str_result = str_template.format(name_disease, json.dumps(map_gene_set_groupings, indent=1))
+
+    # return
+    return str_result
+
+
+def generate_kg_summary_from_trapi_result(json_trapi_result, log=False):
+    '''
+    generates the kg summary from the trapi result for the LLM to use
+    '''
+    # initialize
+    str_kg_summary = ""
+
+    # generate
+    # 1 - parse out trapi and get genes
+    map_genes = get_genes_from_trapi(json_trapi_result=json_trapi_result, log=True)
+    list_genes = list(map_genes.values())
+
+    # 2 - get gene nmf call with gene list input
+    json_nmf_result = call_nmf_service(url=URL_NMF, list_genes=list_genes)
+
+    # 3 - get lists of gene set factors (could be list of gene set lists)
+    map_gene_set_groupings = get_gene_set_groupings_from_nmf(json_nmf=json_nmf_result)
+
+    # 4 - package data into LLM query input
+    str_kg_summary = build_kg_llm_summary(name_disease='Bethlem myopathy', map_gene_set_groupings=map_gene_set_groupings)
+
+    # return
+    return str_kg_summary
+
+
 # main
 if __name__ == "__main__":
     '''
@@ -128,28 +178,34 @@ if __name__ == "__main__":
     with open(file_path) as json_data:
         json_pk = json.loads(json_data.read())
 
-    # pretty print
+    # # pretty print
     # pretty_print_json(json_data=json_pk, num_lines=100)
 
-    # print the nodes json
-    json_nodes = get_result_nodes(json_data=json_pk)
-    # print(json.dumps(json_nodes, indent=2))
+    # # print the nodes json
+    # json_nodes = get_result_nodes(json_data=json_pk)
+    # # print(json.dumps(json_nodes, indent=2))
 
-    # get the gene map
-    map_genes = get_genes_from_trapi(json_trapi_result=json_pk, log=True)
-    pretty_print_json(json_data=map_genes, num_lines=1000)
-    list_genes = list(map_genes.values())
-    print(json.dumps(list_genes, indent=2))
+    # # get the gene map
+    # map_genes = get_genes_from_trapi(json_trapi_result=json_pk, log=True)
+    # # pretty_print_json(json_data=map_genes, num_lines=1000)
+    # list_genes = list(map_genes.values())
+    # # print(json.dumps(list_genes, indent=2))
 
-    # test the NMF service
-    json_nmf_result = call_nmf_service(url=URL_NMF, list_genes=list_genes)
-    print(json.dumps(json_nmf_result, indent=2))
+    # # test the NMF service
+    # json_nmf_result = call_nmf_service(url=URL_NMF, list_genes=list_genes)
+    # # print(json.dumps(json_nmf_result, indent=2))
 
-    # extract the gene set groupings
-    map_gene_set_groupings = get_gene_set_groupings_from_nmf(json_nmf=json_nmf_result)
-    print(json.dumps(map_gene_set_groupings, indent=2))
+    # # extract the gene set groupings
+    # map_gene_set_groupings = get_gene_set_groupings_from_nmf(json_nmf=json_nmf_result)
+    # # print(json.dumps(map_gene_set_groupings, indent=2))
+
+    # # build the llm input
+    # str_kg_summary = build_kg_llm_summary(name_disease='Bethlem myopathy', map_gene_set_groupings=map_gene_set_groupings)
+    # print(str_kg_summary)
 
 
-
+    # get the llm input from the trapi result
+    str_kg_summary = generate_kg_summary_from_trapi_result(json_trapi_result=json_pk)
+    print(str_kg_summary)
 
 
