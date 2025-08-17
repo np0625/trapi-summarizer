@@ -3,9 +3,12 @@
 # imports
 import json
 import logging
+import requests
+
 
 # constants
-URL_NMF = ""
+URL_NMF = "https://translator.broadinstitute.org/genetics_provider/bayes_gene/pigean"
+KEY_NMF_PIGEAN_FACTORS = "pigean_factor"
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -34,19 +37,31 @@ def get_genes_from_trapi(json_trapi_result, log=False):
     return map_result
 
 
-def call_nmf_service(list_genes, log=False):
+def call_nmf_service(url, list_genes, log=False):
     '''
     calls the gene nmf service
     '''
     # initialize
-    json_result = {}
+    json_nmf_result = {}
+
+    # build the input
+    json_input = {
+    "p_value": "0.5",
+    "max_number_gene_sets": 150,
+    "gene_sets": "default",
+    "enrichment_analysis": "hypergeometric",
+    "generate_factor_labels": False,
+    "calculate_gene_scores": True,
+    "exclude_controls": True,
+    "genes": list_genes}
 
     # call REST service
-
-    # get data
+    response = requests.post(url, json=json_input)
+    response.raise_for_status()
+    json_nmf_result = response.json()
 
     # return
-    return json_result
+    return json_nmf_result
 
 
 def get_genes_from_nmf(json_nmf, log=False):
@@ -121,5 +136,13 @@ if __name__ == "__main__":
     # get the gene map
     map_genes = get_genes_from_trapi(json_trapi_result=json_pk, log=True)
     pretty_print_json(json_data=map_genes, num_lines=1000)
+    list_genes = list(map_genes.values())
+    print(json.dumps(list_genes, indent=2))
+
+    # test the NMF service
+    json_nmf_result = call_nmf_service(url=URL_NMF, list_genes=list_genes)
+    print(json.dumps(json_nmf_result, indent=2))
+
+
 
 
