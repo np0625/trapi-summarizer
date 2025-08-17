@@ -149,6 +149,9 @@ def generate_kg_summary_from_trapi_result(json_trapi_result, log=False):
     str_kg_summary = ""
 
     # generate
+    # 0 - get the disease name
+    name_disease = get_disease_name_from_trapi_result(json_trapi_result=json_trapi_result)
+
     # 1 - parse out trapi and get genes
     map_genes = get_genes_from_trapi(json_trapi_result=json_trapi_result, log=True)
     list_genes = list(map_genes.values())
@@ -160,10 +163,30 @@ def generate_kg_summary_from_trapi_result(json_trapi_result, log=False):
     map_gene_set_groupings = get_gene_set_groupings_from_nmf(json_nmf=json_nmf_result)
 
     # 4 - package data into LLM query input
-    str_kg_summary = build_kg_llm_summary(name_disease='Bethlem myopathy', map_gene_set_groupings=map_gene_set_groupings)
+    str_kg_summary = build_kg_llm_summary(name_disease=name_disease, map_gene_set_groupings=map_gene_set_groupings)
 
     # return
     return str_kg_summary
+
+
+def get_disease_name_from_trapi_result(json_trapi_result, log=False):
+    '''
+    extract the disease name from the trapi query result
+    '''
+    # initialize
+    first_disease_name = ""
+
+    # get the nodes map
+    map_nodes = json_trapi_result.get('fields', {}).get('data', {}).get('message', {}).get('knowledge_graph', {}).get('nodes', {})
+
+    # get the first diease
+    for key, value in map_nodes.items():
+        if "biolink:Disease" in value.get("categories", []):
+            first_disease_name = value["name"]
+            break 
+
+    # return
+    return first_disease_name
 
 
 # main
@@ -174,16 +197,21 @@ if __name__ == "__main__":
     '''
     # read the test result file
     file_path = "./data/e0b7fd22-d08c-421d-a551-ea62d1417a36.json"
+    file_path = "./data/breast_cancer.json"
     print("loading file: {}".format(file_path))    
     with open(file_path) as json_data:
         json_pk = json.loads(json_data.read())
 
     # # pretty print
-    # pretty_print_json(json_data=json_pk, num_lines=100)
+    # pretty_print_json(json_data=json_pk, num_lines=200)
 
     # # print the nodes json
     # json_nodes = get_result_nodes(json_data=json_pk)
     # # print(json.dumps(json_nodes, indent=2))
+
+    # get the disease name
+    # name_disease = get_disease_name_from_trapi_result(json_trapi_result=json_pk)
+    # print("Got disease: {}".format(name_disease))
 
     # # get the gene map
     # map_genes = get_genes_from_trapi(json_trapi_result=json_pk, log=True)

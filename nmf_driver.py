@@ -110,7 +110,7 @@ async def main():
                                                         1, None, 10, args.chunk):
             event_final = event
             print(event)
-        print("\n\nFINAL: {}".format(event_final.get('output_text', '')))
+        print("\n\nFINAL: \n{}".format(event_final.get('output_text', '')))
 
 
     else:
