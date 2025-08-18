@@ -65,17 +65,18 @@ def call_nmf_service(url, list_genes, log=False):
     return json_nmf_result
 
 
-def get_genes_from_nmf(json_nmf, log=False):
+def get_gene_groupings_from_nmf(json_nmf, log=False):
     '''
     will parse a valid nmf json and return the gene list
     '''
     # initialize
-    list_result = []
+    map_factor_genes = {}
 
     # get gene list from the nmf json
+    map_factor_genes = {item["factor"]: item.get("top_genes", '').split(";") for item in json_nmf.get(KEY_NMF_PIGEAN_FACTORS, {}).get(KEY_NMF_DATA, [])}
 
     # return
-    return list_result
+    return map_factor_genes
 
 
 def get_gene_set_groupings_from_nmf(json_nmf, log=False):
@@ -116,7 +117,7 @@ def pretty_print_json(json_data, num_lines, log=False):
         print(line)
 
 
-def build_kg_llm_summary(name_disease, map_gene_set_groupings, log=False):
+def build_kg_llm_summary(name_disease, map_gene_set_groupings, map_gene_groupings, log=False):
     '''
     generate the LLM text that will be returned to the LLM calling driver
     '''
@@ -131,11 +132,20 @@ The following data is a derived from a response to the query: "What drugs may tr
 Each item below specifies a latent factor grouping of biological gene sets.
 
 {}
+
+* GENE GROUPINGS BY FACTOR: 
+
+Each item below specifies a latent factor grouping of genes.
+
+{}
+
     """
     str_result = ""
 
     # generate
-    str_result = str_template.format(name_disease, json.dumps(map_gene_set_groupings, indent=1))
+    str_result = str_template.format(name_disease, 
+                                     json.dumps(map_gene_set_groupings, indent=1),
+                                     json.dumps(map_gene_groupings, indent=1))
 
     # return
     return str_result
@@ -162,8 +172,11 @@ def generate_kg_summary_from_trapi_result(json_trapi_result, log=False):
     # 3 - get lists of gene set factors (could be list of gene set lists)
     map_gene_set_groupings = get_gene_set_groupings_from_nmf(json_nmf=json_nmf_result)
 
-    # 4 - package data into LLM query input
-    str_kg_summary = build_kg_llm_summary(name_disease=name_disease, map_gene_set_groupings=map_gene_set_groupings)
+    # 4 - get lists of gene factors (could be list of gene set lists)
+    map_gene_groupings = get_gene_groupings_from_nmf(json_nmf=json_nmf_result)
+
+    # 5 - package data into LLM query input
+    str_kg_summary = build_kg_llm_summary(name_disease=name_disease, map_gene_set_groupings=map_gene_set_groupings, map_gene_groupings=map_gene_groupings)
 
     # return
     return str_kg_summary
@@ -209,7 +222,7 @@ if __name__ == "__main__":
     # json_nodes = get_result_nodes(json_data=json_pk)
     # # print(json.dumps(json_nodes, indent=2))
 
-    # get the disease name
+    # # get the disease name
     # name_disease = get_disease_name_from_trapi_result(json_trapi_result=json_pk)
     # print("Got disease: {}".format(name_disease))
 
@@ -226,6 +239,10 @@ if __name__ == "__main__":
     # # extract the gene set groupings
     # map_gene_set_groupings = get_gene_set_groupings_from_nmf(json_nmf=json_nmf_result)
     # # print(json.dumps(map_gene_set_groupings, indent=2))
+
+    # # extract the gene groupings
+    # map_gene_groupings = get_gene_groupings_from_nmf(json_nmf=json_nmf_result)
+    # print(json.dumps(map_gene_groupings, indent=2))
 
     # # build the llm input
     # str_kg_summary = build_kg_llm_summary(name_disease='Bethlem myopathy', map_gene_set_groupings=map_gene_set_groupings)
