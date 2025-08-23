@@ -2,11 +2,10 @@
 
 # imports
 import json
-import requests
+import gene_info_client
 
 
 # constants
-URL_NMF = "https://translator.broadinstitute.org/genetics_provider/bayes_gene/pigean"
 KEY_NMF_PIGEAN_FACTORS = "pigean-factor"
 KEY_NMF_DATA = "data"
 
@@ -31,31 +30,7 @@ def get_genes_from_trapi(json_trapi_result):
     return map_result
 
 
-def call_nmf_service(url, list_genes):
-    '''
-    calls the gene nmf service
-    '''
-    # initialize
-    json_nmf_result = {}
 
-    # build the input
-    json_input = {
-    "p_value": "0.5",
-    "max_number_gene_sets": 150,
-    "gene_sets": "default",
-    "enrichment_analysis": "hypergeometric",
-    "generate_factor_labels": False,
-    "calculate_gene_scores": True,
-    "exclude_controls": True,
-    "genes": list_genes}
-
-    # call REST service
-    response = requests.post(url, json=json_input)
-    response.raise_for_status()
-    json_nmf_result = response.json()
-
-    # return
-    return json_nmf_result
 
 
 def get_gene_groupings_from_nmf(json_nmf):
@@ -144,7 +119,7 @@ Each item below specifies a latent factor grouping of genes.
     return str_result
 
 
-def generate_kg_summary_from_trapi_result(json_trapi_result):
+async def generate_kg_summary_from_trapi_result(json_trapi_result):
     '''
     generates the kg summary from the trapi result for the LLM to use
     '''
@@ -160,7 +135,7 @@ def generate_kg_summary_from_trapi_result(json_trapi_result):
     list_genes = list(map_genes.values())
 
     # 2 - get gene nmf call with gene list input
-    json_nmf_result = call_nmf_service(url=URL_NMF, list_genes=list_genes)
+    json_nmf_result = await gene_info_client.get_nmf_analysis(genes=list_genes)
 
     # 3 - get lists of gene set factors (could be list of gene set lists)
     map_gene_set_groupings = get_gene_set_groupings_from_nmf(json_nmf=json_nmf_result)
@@ -201,11 +176,14 @@ if __name__ == "__main__":
     main area for tests of the above mehods
     can be moved to pytest class later
     '''
-    # read the test result file
-    file_path = "./data/e0b7fd22-d08c-421d-a551-ea62d1417a36.json"
-    file_path = "./data/breast_cancer.json"
-    print("loading file: {}".format(file_path))
-    with open(file_path) as json_data:
+    import argparse
+    parser = argparse.ArgumentParser(description='Test this puppy')
+
+    parser.add_argument('-i', '--input', help='Input JSON file path of a TRAPI response')
+    args = parser.parse_args()
+
+    print("loading file: {}".format(args.input))
+    with open(args.input) as json_data:
         json_pk = json.loads(json_data.read())
 
     # # pretty print
@@ -243,7 +221,8 @@ if __name__ == "__main__":
 
 
     # get the llm input from the trapi result
-    str_kg_summary = generate_kg_summary_from_trapi_result(json_trapi_result=json_pk)
+    import asyncio
+    str_kg_summary = asyncio.run(generate_kg_summary_from_trapi_result(json_trapi_result=json_pk))
     print(str_kg_summary)
 
 

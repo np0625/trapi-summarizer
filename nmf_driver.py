@@ -86,7 +86,7 @@ async def main():
     # 3 - get lists of gene set factors (could be list of gene set lists)
     # 4 - package data into LLM query input
     # 5 - call LLM with input of factors/gene sets
-    kg_summary = g_utils.generate_kg_summary_from_trapi_result(json_trapi_result=orig)
+    kg_summary = await g_utils.generate_kg_summary_from_trapi_result(json_trapi_result=orig)
 
 
     if (args.template):
