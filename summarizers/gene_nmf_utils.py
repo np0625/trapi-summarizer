@@ -2,7 +2,6 @@
 
 # imports
 import json
-import logging
 import requests
 
 
@@ -10,12 +9,10 @@ import requests
 URL_NMF = "https://translator.broadinstitute.org/genetics_provider/bayes_gene/pigean"
 KEY_NMF_PIGEAN_FACTORS = "pigean-factor"
 KEY_NMF_DATA = "data"
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 # methods
-def get_genes_from_trapi(json_trapi_result, log=False):
+def get_genes_from_trapi(json_trapi_result):
     '''
     extracts a list of genes from a valid trapi response
     '''
@@ -24,21 +21,17 @@ def get_genes_from_trapi(json_trapi_result, log=False):
     map_nodes = {}
 
     # get the nodes from the trapi response json
-    map_nodes = get_result_nodes(json_data=json_trapi_result, log=log)
+    map_nodes = get_result_nodes(json_data=json_trapi_result)
 
     # get gene from trapi
-    map_result = {key: value.get('name', '') for key, value in map_nodes.items() 
+    map_result = {key: value.get('name', '') for key, value in map_nodes.items()
             if "biolink:Gene" in value.get("categories", [])}
-    
-    # log
-    if log:
-        logger.info("got gene map of size: {}".format(len(map_result)))
-                    
+
     # return
     return map_result
 
 
-def call_nmf_service(url, list_genes, log=False):
+def call_nmf_service(url, list_genes):
     '''
     calls the gene nmf service
     '''
@@ -65,7 +58,7 @@ def call_nmf_service(url, list_genes, log=False):
     return json_nmf_result
 
 
-def get_gene_groupings_from_nmf(json_nmf, log=False):
+def get_gene_groupings_from_nmf(json_nmf):
     '''
     will parse a valid nmf json and return the gene list
     '''
@@ -79,7 +72,7 @@ def get_gene_groupings_from_nmf(json_nmf, log=False):
     return map_factor_genes
 
 
-def get_gene_set_groupings_from_nmf(json_nmf, log=False):
+def get_gene_set_groupings_from_nmf(json_nmf):
     '''
     will parse a valid nmf json and return a list of gene set groupings (by factor)
     '''
@@ -93,7 +86,7 @@ def get_gene_set_groupings_from_nmf(json_nmf, log=False):
     return map_factor_gene_sets
 
 
-def get_result_nodes(json_data, log=False):
+def get_result_nodes(json_data):
     '''
     extracts the node map from the result
     '''
@@ -107,7 +100,7 @@ def get_result_nodes(json_data, log=False):
     return map_nodes
 
 
-def pretty_print_json(json_data, num_lines, log=False):
+def pretty_print_json(json_data, num_lines):
     '''
     pretty print given number of lines fro debugging
     '''
@@ -117,7 +110,7 @@ def pretty_print_json(json_data, num_lines, log=False):
         print(line)
 
 
-def build_kg_llm_summary(name_disease, map_gene_set_groupings, map_gene_groupings, log=False):
+def build_kg_llm_summary(name_disease, map_gene_set_groupings, map_gene_groupings):
     '''
     generate the LLM text that will be returned to the LLM calling driver
     '''
@@ -127,13 +120,13 @@ def build_kg_llm_summary(name_disease, map_gene_set_groupings, map_gene_grouping
 
 The following data is a derived from a response to the query: "What drugs may treat the disease: '{}'.
 
-* GENE SET GROUPINGS BY FACTOR: 
+* GENE SET GROUPINGS BY FACTOR:
 
 Each item below specifies a latent factor grouping of biological gene sets.
 
 {}
 
-* GENE GROUPINGS BY FACTOR: 
+* GENE GROUPINGS BY FACTOR:
 
 Each item below specifies a latent factor grouping of genes.
 
@@ -143,7 +136,7 @@ Each item below specifies a latent factor grouping of genes.
     str_result = ""
 
     # generate
-    str_result = str_template.format(name_disease, 
+    str_result = str_template.format(name_disease,
                                      json.dumps(map_gene_set_groupings, indent=1),
                                      json.dumps(map_gene_groupings, indent=1))
 
@@ -151,7 +144,7 @@ Each item below specifies a latent factor grouping of genes.
     return str_result
 
 
-def generate_kg_summary_from_trapi_result(json_trapi_result, log=False):
+def generate_kg_summary_from_trapi_result(json_trapi_result):
     '''
     generates the kg summary from the trapi result for the LLM to use
     '''
@@ -163,7 +156,7 @@ def generate_kg_summary_from_trapi_result(json_trapi_result, log=False):
     name_disease = get_disease_name_from_trapi_result(json_trapi_result=json_trapi_result)
 
     # 1 - parse out trapi and get genes
-    map_genes = get_genes_from_trapi(json_trapi_result=json_trapi_result, log=True)
+    map_genes = get_genes_from_trapi(json_trapi_result=json_trapi_result)
     list_genes = list(map_genes.values())
 
     # 2 - get gene nmf call with gene list input
@@ -182,7 +175,7 @@ def generate_kg_summary_from_trapi_result(json_trapi_result, log=False):
     return str_kg_summary
 
 
-def get_disease_name_from_trapi_result(json_trapi_result, log=False):
+def get_disease_name_from_trapi_result(json_trapi_result):
     '''
     extract the disease name from the trapi query result
     '''
@@ -196,7 +189,7 @@ def get_disease_name_from_trapi_result(json_trapi_result, log=False):
     for key, value in map_nodes.items():
         if "biolink:Disease" in value.get("categories", []):
             first_disease_name = value["name"]
-            break 
+            break
 
     # return
     return first_disease_name
@@ -211,7 +204,7 @@ if __name__ == "__main__":
     # read the test result file
     file_path = "./data/e0b7fd22-d08c-421d-a551-ea62d1417a36.json"
     file_path = "./data/breast_cancer.json"
-    print("loading file: {}".format(file_path))    
+    print("loading file: {}".format(file_path))
     with open(file_path) as json_data:
         json_pk = json.loads(json_data.read())
 
