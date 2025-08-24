@@ -1,5 +1,6 @@
 import re
 
+### Contains functions used by both TRAPI format and UI format summarizers
 def sanitize_categories(cats: list) -> list:
     eliminate = ('biolink:NamedThing', 'biolink:BiologicalEntity', 'biolink:ThingWithTaxon',
                    'biolink:PhysicalEssence', 'biolink:PhysicalEssenceOrOccurrent')
