@@ -6,8 +6,6 @@ import jq
 KEY_NMF_PIGEAN_FACTORS = "pigean-factor"
 KEY_NMF_DATA = "data"
 
-
-# methods
 def get_genes_from_trapi(trapi_response_message):
     # Extracts a list of genes from a trapi response
     nodes = jq.compile('.fields.data.message.knowledge_graph.nodes').input_value(trapi_response_message).first()
@@ -16,41 +14,10 @@ def get_genes_from_trapi(trapi_response_message):
     return genes
 
 
-def get_gene_groupings_from_nmf(json_nmf):
-    '''
-    will parse a valid nmf json and return the gene list
-    '''
-    # initialize
-    map_factor_genes = {}
-
-    # get gene list from the nmf json
-    map_factor_genes = {item["factor"]: item.get("top_genes", '').split(";") for item in json_nmf.get(KEY_NMF_PIGEAN_FACTORS, {}).get(KEY_NMF_DATA, [])}
-
-    # return
-    return map_factor_genes
-
-
-def get_gene_set_groupings_from_nmf(json_nmf):
-    '''
-    will parse a valid nmf json and return a list of gene set groupings (by factor)
-    '''
-    # initialize
-    map_factor_gene_sets = {}
-
-    # get gene list from the nmf json
-    map_factor_gene_sets = {item["factor"]: item.get("top_gene_sets", '').split(";") for item in json_nmf.get(KEY_NMF_PIGEAN_FACTORS, {}).get(KEY_NMF_DATA, [])}
-
-    # return
-    return map_factor_gene_sets
-
-def pretty_print_json(json_data, num_lines):
-    '''
-    pretty print given number of lines fro debugging
-    '''
-    pretty_json = json.dumps(json_data, indent=2)
-    lines = pretty_json.split('\n')[:num_lines]
-    for line in lines:
-        print(line)
+# nmf: json response from API
+def get_groupings_from_nmf(nmf, target: str) -> dict:
+    retval = {item["factor"]: item.get(target, '').split(";") for item in nmf.get(KEY_NMF_PIGEAN_FACTORS, {}).get(KEY_NMF_DATA, [])}
+    return retval
 
 
 def build_kg_llm_summary(name_disease, map_gene_set_groupings, map_gene_groupings):
@@ -99,18 +66,14 @@ async def generate_kg_summary_from_trapi_result(json_trapi_result):
     name_disease = get_disease_name_from_trapi_result(json_trapi_result=json_trapi_result)
 
     # 1 - parse out trapi and get genes
-    map_genes = get_genes_from_trapi(json_trapi_result=json_trapi_result)
+    map_genes = get_genes_from_trapi(json_trapi_result)
     list_genes = list(map_genes.values())
-
     # 2 - get gene nmf call with gene list input
-    json_nmf_result = await gene_info_client.get_nmf_analysis(genes=list_genes)
-
+    json_nmf_result = await gene_info_client.get_nmf_analysis(list_genes, 40)
     # 3 - get lists of gene set factors (could be list of gene set lists)
-    map_gene_set_groupings = get_gene_set_groupings_from_nmf(json_nmf=json_nmf_result)
-
+    map_gene_set_groupings = get_groupings_from_nmf(json_nmf_result, 'top_gene_sets')
     # 4 - get lists of gene factors (could be list of gene set lists)
-    map_gene_groupings = get_gene_groupings_from_nmf(json_nmf=json_nmf_result)
-
+    map_gene_groupings = get_groupings_from_nmf(json_nmf_result, 'top_genes')
     # 5 - package data into LLM query input
     str_kg_summary = build_kg_llm_summary(name_disease=name_disease, map_gene_set_groupings=map_gene_set_groupings, map_gene_groupings=map_gene_groupings)
 
