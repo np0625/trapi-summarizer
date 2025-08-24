@@ -20,11 +20,9 @@ def get_groupings_from_nmf(nmf, target: str) -> dict:
     return retval
 
 
-def build_kg_llm_summary(name_disease, map_gene_set_groupings, map_gene_groupings):
-    '''
-    generate the LLM text that will be returned to the LLM calling driver
-    '''
-    # initialize
+def build_kg_llm_summary(name_disease, gene_set_groupings: dict, gene_groupings: dict) -> str:
+    # generate the LLM text that will be returned to the LLM calling driver
+
     str_template = """
 * QUERY INFORMATION
 
@@ -47,8 +45,8 @@ Each item below specifies a latent factor grouping of genes.
 
     # generate
     str_result = str_template.format(name_disease,
-                                     json.dumps(map_gene_set_groupings, indent=1),
-                                     json.dumps(map_gene_groupings, indent=1))
+                                     json.dumps(gene_set_groupings, indent=1),
+                                     json.dumps(gene_groupings, indent=1))
 
     # return
     return str_result
@@ -66,16 +64,16 @@ async def generate_kg_summary_from_trapi_result(json_trapi_result):
     name_disease = get_disease_name_from_trapi_result(json_trapi_result=json_trapi_result)
 
     # 1 - parse out trapi and get genes
-    map_genes = get_genes_from_trapi(json_trapi_result)
-    list_genes = list(map_genes.values())
+    genes = get_genes_from_trapi(json_trapi_result)
+    list_genes = list(genes.values())
     # 2 - get gene nmf call with gene list input
-    json_nmf_result = await gene_info_client.get_nmf_analysis(list_genes, 40)
+    nmf_result = await gene_info_client.get_nmf_analysis(list_genes, 40)
     # 3 - get lists of gene set factors (could be list of gene set lists)
-    map_gene_set_groupings = get_groupings_from_nmf(json_nmf_result, 'top_gene_sets')
+    gene_set_groupings = get_groupings_from_nmf(nmf_result, 'top_gene_sets')
     # 4 - get lists of gene factors (could be list of gene set lists)
-    map_gene_groupings = get_groupings_from_nmf(json_nmf_result, 'top_genes')
+    gene_groupings = get_groupings_from_nmf(nmf_result, 'top_genes')
     # 5 - package data into LLM query input
-    str_kg_summary = build_kg_llm_summary(name_disease=name_disease, map_gene_set_groupings=map_gene_set_groupings, map_gene_groupings=map_gene_groupings)
+    str_kg_summary = build_kg_llm_summary(name_disease, gene_set_groupings, gene_groupings)
 
     # return
     return str_kg_summary
