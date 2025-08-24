@@ -1,9 +1,6 @@
-
-
-# imports
 import json
 import gene_info_client
-
+import jq
 
 # constants
 KEY_NMF_PIGEAN_FACTORS = "pigean-factor"
@@ -11,26 +8,12 @@ KEY_NMF_DATA = "data"
 
 
 # methods
-def get_genes_from_trapi(json_trapi_result):
-    '''
-    extracts a list of genes from a valid trapi response
-    '''
-    # initialize
-    map_result = {}
-    map_nodes = {}
-
-    # get the nodes from the trapi response json
-    map_nodes = get_result_nodes(json_data=json_trapi_result)
-
-    # get gene from trapi
-    map_result = {key: value.get('name', '') for key, value in map_nodes.items()
-            if "biolink:Gene" in value.get("categories", [])}
-
-    # return
-    return map_result
-
-
-
+def get_genes_from_trapi(trapi_response_message):
+    # Extracts a list of genes from a trapi response
+    nodes = jq.compile('.fields.data.message.knowledge_graph.nodes').input_value(trapi_response_message).first()
+    genes = {key: value.get('name', '') for key, value in nodes.items()
+             if "biolink:Gene" in value.get("categories", [])}
+    return genes
 
 
 def get_gene_groupings_from_nmf(json_nmf):
@@ -59,21 +42,6 @@ def get_gene_set_groupings_from_nmf(json_nmf):
 
     # return
     return map_factor_gene_sets
-
-
-def get_result_nodes(json_data):
-    '''
-    extracts the node map from the result
-    '''
-    # initialize
-    map_nodes = {}
-
-    # get the nodes
-    map_nodes = json_data.get('fields', {}).get('data', {}).get('message', {}).get('knowledge_graph', {}).get('nodes', {})
-
-    # return
-    return map_nodes
-
 
 def pretty_print_json(json_data, num_lines):
     '''
