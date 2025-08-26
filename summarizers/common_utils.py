@@ -17,8 +17,8 @@ def create_node_data_summary(node_presummaries: list[dict]) -> str:
 
 
 def create_edge_data_summary(edge_presummaries: list[dict], skip=0) -> str:
-    retval = '| <SUBJECT> | <PREDICATE> | <OBJECT> | <PUBMED IDS> |\n'
+    retval = '| <SUBJECT> | <PREDICATE> | <OBJECT> | <PUBMED IDS> | <CLINICAL TRIAL IDS> |\n'
     for e in edge_presummaries[skip:]: # (Sometimes) try skipping the first element, which is the main "treats" edge
         retval += f"| {e['subject_name']} | {re.sub(r"^biolink:", '', e['predicate'])} | {e['object_name']} | "
-        retval += ",".join(e['pub_ids']) + " |\n"
+        retval += ",".join(e['pub_ids']) + " | " + ",".join(e['ct_ids']) + " |\n"
     return retval

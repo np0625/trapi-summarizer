@@ -33,6 +33,11 @@ def extract_edge_publications(edge: dict, cutoff):
     retval = jq_tools.try_first('.attributes[] | select(.attribute_type_id == "biolink:publications") | .value', edge, [])
     return retval[:cutoff]
 
+def extract_clinical_trials(edge: dict, cutoff=100):
+    cts = jq_tools.try_all('.attributes[] | select(.attribute_type_id == "biolink:supporting_study") | .value', edge, [])
+    retval = [ct for ct in cts if re.match(r'^NCT[0-9]+$', str(ct))][:cutoff]
+    return retval
+
 """Given the list of all edge data corresponding to the targeted results, return
 only the unique triples and the precise fields that will be used to generate textual summaries.
 """
@@ -45,7 +50,8 @@ def create_edge_presummary_raw_data(edges: list[dict], node_collection: dict, pu
             'object_curie': edge['object'],
             'subject_name': node_collection[edge['subject']]['name'],
             'object_name': node_collection[edge['object']]['name'],
-            'pub_ids': extract_edge_publications(edge, pub_cutoff)
+            'pub_ids': extract_edge_publications(edge, pub_cutoff),
+            'ct_ids': extract_clinical_trials(edge)
         }
         for edge in uniq
     ]
