@@ -31,7 +31,19 @@ async def get_clinical_trials_info(nct_ids: str | list[str], timeout: float = 4.
         async with httpx.AsyncClient(timeout=timeout) as client:
             response = await client.get(url, params=params)
             response.raise_for_status()  # Raise an exception for HTTP error status codes
-            return response.json()
+            retval = response.json()
+
+            # Check if 'studies' key exists and is a non-empty array
+            if 'studies' in retval and isinstance(retval['studies'], list) and len(retval['studies']) > 0:
+                # For each study, remove the contactsLocationsModule if it exists
+                for study in retval['studies']:
+                    if ('protocolSection' in study and
+                        isinstance(study['protocolSection'], dict) and
+                        'contactsLocationsModule' in study['protocolSection']):
+                        del study['protocolSection']['contactsLocationsModule']
+
+            return retval
+
     except httpx.TimeoutException:
         raise httpx.TimeoutException(f"Request timed out after {timeout}s")
     except httpx.RequestError as e:
@@ -45,4 +57,4 @@ if __name__ == "__main__":
     import json
 
     print(json.dumps(asyncio.run(get_clinical_trials_info('NCT00437242'))))
-    print(json.dumps(asyncio.run(get_clinical_trials_info(['NCT00437242', 'NCT05279937']))))
+    print(json.dumps(asyncio.run(get_clinical_trials_info(['NCT00104273','NCT02359552']))))
