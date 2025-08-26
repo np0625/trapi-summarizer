@@ -1,0 +1,37 @@
+model: o3
+reasoning:
+  effort: high
+  summary: detailed
+tools:
+  - type: function
+    name: get_publication_info
+    description: retrieve abstracts, authors, and article titles and dates for a given comma-separated list of publication IDs
+    parameters:
+      type: object
+      properties:
+        pubids:
+          type: string
+          description: comma-separated list of publication IDs, e.g., "PMID:36008391,PMID:561202376,,PMC8959199"
+        request_id:
+          type: string
+          description: any unique identifier for this request to assist with tracing and debugging
+      additionalProperties: false
+      required:
+        - pubids
+        - request_id
+      strict: true
+  - type: function
+    name: get_clinical_trials_info
+    description: retrieve clinical trial info from the clinicaltrials.gov v2 API
+    parameters:
+      type: object
+      properties:
+        nctids:
+          type: string
+          description: comma-separated list of NCT IDs, e.g., "NCT00104273,NCT02359552"
+      additionalProperties: false
+      required:
+        - nctids
+      strict: true
+tool_choice: auto
+instructions: !file instr-sr-3.txt
