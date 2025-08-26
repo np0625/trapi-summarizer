@@ -1,6 +1,7 @@
 import json
 import gene_info_client
 import jq
+from . import trapi_tools
 
 # constants
 KEY_NMF_PIGEAN_FACTORS = "pigean-factor"
@@ -20,7 +21,7 @@ def get_groupings_from_nmf(nmf, target: str) -> dict:
     return retval
 
 
-def build_kg_llm_summary(name_disease, gene_set_groupings: dict, gene_groupings: dict) -> str:
+def build_kg_llm_summary(disease_data: tuple, gene_set_groupings: dict, gene_groupings: dict) -> str:
     # generate the LLM text that will be returned to the LLM calling driver
 
     str_template = """
