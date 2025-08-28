@@ -151,7 +151,7 @@ if __name__ == "__main__":
     idx = int(sys.argv[2])
     # infile['disease'] = 'MONDO:0005147'
     # print(json.dumps((create_ui_presummary(infile, idx))))
-    shrink = shrink_payload(infile, (0,1,45))
+    shrink = shrink_payload(infile, idx)
     print(json.dumps(shrink))
-    print(json.dumps(create_ui_presummary(shrink, idx)))
+    print(json.dumps(create_ui_presummary(shrink, 0)))
 
