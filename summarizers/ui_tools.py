@@ -7,12 +7,14 @@ _result_jq_expr = jq.compile(f"{{ {','.join(_result_fields)} }}")
 _node_fields = ('names', 'types')
 _node_jq_expr = jq.compile(f"{{ {','.join(_node_fields)} }}")
 
-_edge_fields = ('support', 'subject', 'predicate', 'object', 'publications')
+_edge_fields = ('support', 'subject', 'predicate', 'object', 'publications', 'trials')
 _edge_jq_expr = jq.compile(f"{{ {','.join(_edge_fields)} }}")
 
 _path_fields = ('subgraph',)
 _path_jq_expr = jq.compile(f"{{ {','.join(_path_fields)} }}")
 
+# Reduce the provided UI format payload to only those fields that are relevant to
+# the specified result elements (as specified in `idx`)
 def shrink_payload(payload: dict, idx: int | tuple[int, ...] | range) -> dict:
     if isinstance(idx, int):
         idx = (idx,)
@@ -111,7 +113,8 @@ def collect_edges_for_path(path_id, orig_paths, orig_edges, edge_collection=[], 
             'subject_name': edge_info['subject'],
             'object_name': edge_info['object'],
             'predicate': edge_info['predicate'],
-            'pub_ids': flatten_publication_info(edge_info['publications'])[:pub_cutoff]
+            'pub_ids': flatten_publication_info(edge_info['publications'])[:pub_cutoff],
+            'nct_ids': edge_info['trials']
         })
         for p_id in edge_info['support']:
             collect_edges_for_path(p_id, orig_paths, orig_edges, edge_collection)
@@ -150,5 +153,5 @@ if __name__ == "__main__":
     # print(json.dumps((create_ui_presummary(infile, idx))))
     shrink = shrink_payload(infile, (0,1,45))
     print(json.dumps(shrink))
-    print(json.dumps(create_ui_presummary(shrink, 2)))
+    print(json.dumps(create_ui_presummary(shrink, idx)))
 
