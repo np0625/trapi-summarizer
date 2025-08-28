@@ -39,11 +39,27 @@ The following data is a response to the query: "What drugs may treat the disease
     return retval
 
 if __name__ == "__main__":
-    import sys
+    import argparse
     import json
-    with open(sys.argv[1], 'r') as f:
-        infile =json.load(f)
-    idx = int(sys.argv[2])
-    # infile['disease'] = 'MONDO:0005147'
-    target = ui_tools.shrink_payload(infile, idx)
-    print(create_ui_summary(target, 0))
+
+    parser = argparse.ArgumentParser(description='Generate UI summary from TRAPI results')
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('--from-full', type=str, help='Path to full payload file')
+    group.add_argument('--from-result', type=str, help='Path to result file')
+    parser.add_argument('--idx', type=int, help='Index for shrinking payload (required with --from-full)')
+
+    args = parser.parse_args()
+
+    if args.from_full:
+        if args.idx is None:
+            parser.error("--idx argument is required when using --from-full")
+
+        with open(args.from_full, 'r') as f:
+            infile = json.load(f)
+        target = ui_tools.shrink_payload(infile, args.idx)
+        print(create_ui_summary(target, 0))
+
+    elif args.from_result:
+        with open(args.from_result, 'r') as f:
+            infile = json.load(f)
+        print(create_ui_summary(infile, 0))
