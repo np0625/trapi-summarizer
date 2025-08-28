@@ -9,7 +9,7 @@ from sse_starlette.sse import EventSourceResponse
 
 client = openai_lib.OpenAIClient(os.environ['OPENAI_KEY'])
 
-template = openai_lib.expand_yaml_template('yaml/reasoner-tools.yaml', ('instructions',))
+template = openai_lib.expand_yaml_template('yaml/rt2.yaml', ('instructions',))
 
 
 app = FastAPI()
