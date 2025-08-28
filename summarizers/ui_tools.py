@@ -114,7 +114,7 @@ def collect_edges_for_path(path_id, orig_paths, orig_edges, edge_collection=[], 
             'object_name': edge_info['object'],
             'predicate': edge_info['predicate'],
             'pub_ids': flatten_publication_info(edge_info['publications'])[:pub_cutoff],
-            'nct_ids': edge_info['trials']
+            'ct_ids': edge_info['trials']
         })
         for p_id in edge_info['support']:
             collect_edges_for_path(p_id, orig_paths, orig_edges, edge_collection)
