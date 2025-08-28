@@ -13,24 +13,32 @@ _edge_jq_expr = jq.compile(f"{{ {','.join(_edge_fields)} }}")
 _path_fields = ('subgraph',)
 _path_jq_expr = jq.compile(f"{{ {','.join(_path_fields)} }}")
 
-def shrink_payload(payload, idx):
+def shrink_payload(payload: dict, idx: int | tuple[int, ...] | range) -> dict:
+    if isinstance(idx, int):
+        idx = (idx,)
+
     retval = {}
     data = payload['data']
     orig_results = data['results']
-    orig_paths = data['paths']
     orig_nodes = data['nodes']
-    orig_edges = data['edges']
-    result_elem = _result_jq_expr.input_value(orig_results[idx]).first()
-    disease_curie = result_elem['object']
-    retval['disease'] = disease_curie
-    retval['disease_description'] = orig_nodes[disease_curie]['descriptions'][0]
-    retval['disease_name'] = orig_nodes[disease_curie]['names'][0]
-    retval['results'] = [result_elem]
+
     retval['paths'] = {}
     retval['nodes'] = {}
     retval['edges'] = {}
-    path_copy = result_elem['paths'][:] # Fancy python shallow copy
-    shrink_payload_aux(payload, path_copy, retval)
+    retval['results'] = []
+    first_iter = True
+    for i in idx:
+        result_elem = _result_jq_expr.input_value(orig_results[i]).first()
+        if first_iter:
+            disease_curie = result_elem['object']
+            retval['disease'] = disease_curie
+            retval['disease_description'] = orig_nodes[disease_curie]['descriptions'][0]
+            retval['disease_name'] = orig_nodes[disease_curie]['names'][0]
+            first_iter = False
+
+        retval['results'].append(result_elem)
+        path_copy = result_elem['paths'][:] # Fancy python shallow copy
+        shrink_payload_aux(payload, path_copy, retval)
     return retval
 
 def shrink_payload_aux(payload, paths, retval):
@@ -58,7 +66,7 @@ def shrink_payload_aux(payload, paths, retval):
 
 # Note: for now this assumes creating a single element summary.
 # This is different from the trapi_summarizer which can summarize a range of result elements
-def create_ui_presummary(payload, idx):
+def create_ui_presummary(payload, idx: int):
     retval = {}
     if 'data' in payload:
         data = payload['data']
@@ -140,7 +148,7 @@ if __name__ == "__main__":
     idx = int(sys.argv[2])
     # infile['disease'] = 'MONDO:0005147'
     # print(json.dumps((create_ui_presummary(infile, idx))))
-    shrink = shrink_payload(infile, idx)
+    shrink = shrink_payload(infile, (0,1,45))
     print(json.dumps(shrink))
-    print(json.dumps(create_ui_presummary(shrink, 0)))
+    print(json.dumps(create_ui_presummary(shrink, 2)))
 
