@@ -21,8 +21,8 @@ tools:
         - request_id
       strict: true
   - type: function
-    name: get_clinical_trials_info
-    description: retrieve clinical trial info from the clinicaltrials.gov v2 API
+    name: get_clinical_trials_isb_info
+    description: retrieve clinical trial info from an API that mimics the clinicaltrials.gov v2 API
     parameters:
       type: object
       properties:
