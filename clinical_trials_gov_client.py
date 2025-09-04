@@ -1,6 +1,6 @@
 import httpx
 
-async def get_clinical_trials_info(nct_ids: str | list[str], timeout: float = 4.0) -> dict:
+async def get_clinical_trials_gov_info(nct_ids: str | list[str], timeout: float = 4.0) -> dict:
     """
     Fetch clinical trial information from the ClinicalTrials.gov API.
 
@@ -56,5 +56,5 @@ if __name__ == "__main__":
     import asyncio
     import json
 
-    print(json.dumps(asyncio.run(get_clinical_trials_info('NCT00437242'))))
-    print(json.dumps(asyncio.run(get_clinical_trials_info(['NCT00104273','NCT02359552']))))
+    print(json.dumps(asyncio.run(get_clinical_trials_gov_info('NCT00437242'))))
+    print(json.dumps(asyncio.run(get_clinical_trials_gov_info(['NCT00104273','NCT02359552']))))
