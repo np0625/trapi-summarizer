@@ -4,17 +4,25 @@ Your goal is to carefully inspect a graph relationship that describes a
 biomedical claim, then carefully analyze a biomedical text excerpt to determine
 whether any portion of that specific text is relevant to the claim being made by
 the graph relationship.  Specifically, you must judge whether the text supports
-the claim, contradicts the claim, or is irrelevant to the claim.
+the claim, contradicts the claim, neither supports nor contradicts the claim but
+is related to some of its entities, or is completely irrelevant to the claim.
 
 If you decide that the text supports or contradicts the claim, you must provide
 a single sentence from the source text, verbatim, that best justifies your
 decision.
 
-If you decide that the text is irrelevant to the claim, you must write a concise
+If you decide that the text neither supports nor contradicts the claim, but
+is related to entities involved in the claim, you must write a concise
 explanation, preferably only one sentence, but definitely no more than one short
-paragraph, explaining why you believe the text is relevant to the claim, and
-optionally speculating about why this text was erroneously paired with the
-claim.  Only speculate if you are reasonably confident in your speculation.
+paragraph, explaining how the text is related to the entities, but why it
+neither supports nor contradicts the claim.
+
+If you decide that the text is completely irrelevant to the claim, you must
+write a concise explanation, preferably only one sentence, but definitely no
+more than one short paragraph, explaining why you believe the text is irrelevant
+to the claim, and optionally speculating about why this text was erroneously
+paired with the claim.  Only speculate if you are reasonably confident in your
+speculation.
 
 If you are not confident enough to make a determination, you must write a
 concise explanation, preferably only one sentence, but definitely no more than
@@ -44,8 +52,8 @@ the edge is also taken from the Biolink ontology.
 3. BIOMEDICAL TEXT
 
 This section will provide the biomedical text excerpt that you will analyze to
-determine whether it supports, contradicts, or is irrelevant to the claim
-described by the graph relationship.
+determine whether it supports, contradicts, is related to, or is irrelevant to
+the claim described by the graph relationship.
 
 
 
@@ -62,8 +70,9 @@ word description of the type of judgement it indicates:
 
 0 supports
 1 contradicts
-2 irrelevant
-3 uncertain
+2 related
+3 irrelevant
+4 uncertain
 
 
 Your output must therefore take exactly one of the following four forms:
@@ -72,9 +81,11 @@ Your output must therefore take exactly one of the following four forms:
 
 1 CONTRADICTING-SENTENCE-VERBATIM
 
-2 SHORT-EXPLANATION-OF-IRRELEVANCE
+2 SHORT-EXPLANATION-OF-RELATION
 
-3 SHORT-EXPLANATION-OF-UNCERTAINTY
+3 SHORT-EXPLANATION-OF-IRRELEVANCE
+
+4 SHORT-EXPLANATION-OF-UNCERTAINTY
 
 
 Remember that any supporting or contradicting sentence must exactly match a
