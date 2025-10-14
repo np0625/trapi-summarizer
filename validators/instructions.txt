@@ -64,8 +64,8 @@ strict textual structure.  The first character of your response must be a single
 numerical digit, followed by a single space, followed by the appropriate text,
 depending on the chosen digit.
 
-The digit represents a code that indicates one of the four judgement choices
-described earlier.  Here are the four choices of digit, each followed by a one
+The digit represents a code that indicates one of the five judgement choices
+described earlier.  Here are the five choices of digit, each followed by a one
 word description of the type of judgement it indicates:
 
 0 supports
@@ -75,7 +75,7 @@ word description of the type of judgement it indicates:
 4 uncertain
 
 
-Your output must therefore take exactly one of the following four forms:
+Your output must therefore take exactly one of the following five forms:
 
 0 SUPPORTING-SENTENCE-VERBATIM
 
