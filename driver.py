@@ -2,7 +2,9 @@ import json
 import argparse
 import os
 from graphwerk import trapimsg
-from summarizers import trapi_summarizer as summarizer
+from summarizers import trapi_summarizer
+from summarizers import ui_summarizer
+from summarizers import ui_tools
 import openai_lib
 import sys
 import ars_client
@@ -16,7 +18,7 @@ def is_pk(value: str) -> bool:
     except ValueError:
         return False
 
-def load_trapi_response(source: str) -> dict:
+def load_input(source: str) -> dict:
     if is_pk(source):
         path = ars_client.fetch_response(source)
     else:
@@ -28,7 +30,9 @@ def load_trapi_response(source: str) -> dict:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Trim down TRAPI response files')
     parser.add_argument('-n', type=int, default=100, help='Number of results to include (default: 100)')
-    parser.add_argument('-i', '--input', help='Input JSON file path of a TRAPI response')
+    parser.add_argument('-i', '--input', help='Input JSON file path')
+    parser.add_argument('-f', '--input-format', choices=('trapi', 'ui'), default='trapi',
+                        help='Input payload format (default: trapi)')
     parser.add_argument('--start', type=int, help='Starting index in results array')
     parser.add_argument('--end', type=int, help='Ending index (exclusive) in results array')
     parser.add_argument('--list', type=str, help='Comma-separated list of indices, e.g. --list=9,18,202')
@@ -63,6 +67,14 @@ def get_index_range(args) -> tuple[int, ...] | range:
     else:
         return range(args.start, args.end + 1)
 
+def get_ui_summary(payload: dict, selected_idx: int) -> str:
+    # Full UI payloads need shrinking to inject disease metadata used by the summarizer.
+    if 'data' in payload and 'disease' not in payload['data']:
+        print("in that thing")
+        payload = ui_tools.shrink_payload(payload, selected_idx)
+        selected_idx = 0
+    return ui_summarizer.create_ui_summary(payload, selected_idx)
+
 
 async def main():
     client = openai_lib.OpenAIClient(os.environ['OPENAI_KEY'])
@@ -74,9 +86,20 @@ async def main():
         print(resp)
         sys.exit(0)
 
-    orig = load_trapi_response(args.input)
+    orig = load_input(args.input)
     idx_range = get_index_range(args)
-    kg_summary = summarizer.summarize_trapi_response(orig, idx_range, 8)
+    if args.input_format == 'trapi':
+        kg_summary = trapi_summarizer.summarize_trapi_response(orig, idx_range, 8)
+    else:
+        selected_idxs = tuple(idx_range)
+        if len(selected_idxs) != 1:
+            raise ValueError(
+                "UI summaries currently support exactly one result index. "
+                "Use --list=<n> or run with -n 1."
+            )
+        kg_summary = get_ui_summary(orig, selected_idxs[0])
+        print(kg_summary)
+        sys.exit(0)
 
     if (args.template):
         template = openai_lib.expand_yaml_template(args.template, ('instructions',))
