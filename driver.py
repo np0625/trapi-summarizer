@@ -133,7 +133,8 @@ async def main():
             gene_dict = gene_nmf_utils.extract_genes_from_trapi_nodes(res_nodes)
             nmf_summary = await gene_nmf_utils.generate_nmf_presummary(
                 gene_dict, disease_name, args.min_genes)
-            await execute_llm_call(client, nmf_summary, args.nmf_template, args)
+            if nmf_summary:
+                await execute_llm_call(client, nmf_summary, args.nmf_template, args)
 
     else:
         # UI format
@@ -158,7 +159,8 @@ async def main():
             gene_dict = gene_nmf_utils.extract_genes_from_ui_nodes(presummary['nodes'])
             nmf_summary = await gene_nmf_utils.generate_nmf_presummary(
                 gene_dict, presummary['disease_name'], args.min_genes)
-            await execute_llm_call(client, nmf_summary, args.nmf_template, args)
+            if nmf_summary:
+                await execute_llm_call(client, nmf_summary, args.nmf_template, args)
 
 
 if __name__ == '__main__':

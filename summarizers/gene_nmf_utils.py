@@ -45,10 +45,14 @@ async def generate_nmf_presummary(gene_dict: dict[str, str], disease_name: str,
                                    min_genes: int = DEFAULT_MIN_GENES,
                                    timeout: float = 40.0) -> str:
     """Full pipeline: genes -> PiGEaN API -> parse NMF factors -> build pre-summary text.
-    Always submits to PiGEaN. If gene count < min_genes, prints a stderr warning and
-    prepends a caveat to the pre-summary text.
+    Returns None if there are no genes at all. If gene count is nonzero but below
+    min_genes, prints a stderr warning and prepends a caveat to the pre-summary text.
     """
     gene_names = list(gene_dict.values())
+    if len(gene_names) == 0:
+        print("No genes found in result; skipping NMF analysis.", file=sys.stderr)
+        return None
+
     warning = ''
     if len(gene_names) < min_genes:
         msg = (f"WARNING: Only {len(gene_names)} gene(s) found in result; "
