@@ -1,4 +1,5 @@
 import json
+import sys
 import gene_info_client
 import jq
 from . import trapi_tools
@@ -6,6 +7,7 @@ from . import trapi_tools
 # constants
 KEY_NMF_PIGEAN_FACTORS = "pigean-factor"
 KEY_NMF_DATA = "data"
+DEFAULT_MIN_GENES = 5
 
 def get_genes_from_trapi(trapi_response_message):
     # Extracts a list of genes from a trapi response
@@ -21,13 +23,51 @@ def get_groupings_from_nmf(nmf, target: str) -> dict:
     return retval
 
 
-def build_kg_llm_summary(disease_data: tuple, gene_set_groupings: dict, gene_groupings: dict) -> str:
-    # generate the LLM text that will be returned to the LLM calling driver
+def extract_genes_from_trapi_nodes(node_collection: dict) -> dict[str, str]:
+    """Filter a per-result node collection (TRAPI format) for biolink:Gene nodes.
+    node_collection is {curie: node_data} as populated by trapimsg.collect_nodes_for_edge_collection().
+    """
+    return {curie: data.get('name', '')
+            for curie, data in node_collection.items()
+            if 'biolink:Gene' in data.get('categories', [])}
 
-    str_template = """
-* QUERY INFORMATION
 
-The following data is a derived from a response to the query: "What drugs may treat the disease: '{}'.
+def extract_genes_from_ui_nodes(node_collection: list[dict]) -> dict[str, str]:
+    """Filter a per-result node collection (UI format) for biolink:Gene nodes.
+    node_collection is a list of {curie, name, categories} dicts from ui_tools.
+    """
+    return {node['curie']: node['name']
+            for node in node_collection
+            if 'biolink:Gene' in node.get('categories', [])}
+
+
+async def generate_nmf_presummary(gene_dict: dict[str, str], disease_name: str,
+                                   min_genes: int = DEFAULT_MIN_GENES,
+                                   timeout: float = 40.0) -> str:
+    """Full pipeline: genes -> PiGEaN API -> parse NMF factors -> build pre-summary text.
+    Always submits to PiGEaN. If gene count < min_genes, prints a stderr warning and
+    prepends a caveat to the pre-summary text.
+    """
+    gene_names = list(gene_dict.values())
+    warning = ''
+    if len(gene_names) < min_genes:
+        msg = (f"WARNING: Only {len(gene_names)} gene(s) found in result; "
+               f"minimum {min_genes} recommended for reliable NMF analysis.")
+        print(msg, file=sys.stderr)
+        warning = (f"* CAVEAT: This result contains only {len(gene_names)} gene(s). "
+                   f"NMF factor analysis with fewer than {min_genes} genes may not be reliable.\n\n")
+
+    nmf_result = await gene_info_client.get_nmf_analysis(gene_names, timeout)
+    gene_set_groupings = get_groupings_from_nmf(nmf_result, 'top_gene_sets')
+    gene_groupings = get_groupings_from_nmf(nmf_result, 'top_genes')
+    return build_kg_llm_summary(disease_name, gene_set_groupings, gene_groupings, warning)
+
+
+def build_kg_llm_summary(disease_name: str, gene_set_groupings: dict, gene_groupings: dict,
+                         warning: str = '') -> str:
+    str_template = """{}* QUERY INFORMATION
+
+The following data is derived from a response to the query: "What drugs may treat the disease: '{}'.
 
 * GENE SET GROUPINGS BY FACTOR:
 
@@ -40,17 +80,10 @@ Each item below specifies a latent factor grouping of biological gene sets.
 Each item below specifies a latent factor grouping of genes.
 
 {}
-
-    """
-    str_result = ""
-
-    # generate
-    str_result = str_template.format(name_disease,
-                                     json.dumps(gene_set_groupings, indent=1),
-                                     json.dumps(gene_groupings, indent=1))
-
-    # return
-    return str_result
+"""
+    return str_template.format(warning, disease_name,
+                               json.dumps(gene_set_groupings, indent=1),
+                               json.dumps(gene_groupings, indent=1))
 
 
 async def generate_kg_summary_from_trapi_result(json_trapi_result):
@@ -74,7 +107,9 @@ async def generate_kg_summary_from_trapi_result(json_trapi_result):
     # 4 - get lists of gene factors (could be list of gene set lists)
     gene_groupings = get_groupings_from_nmf(nmf_result, 'top_genes')
     # 5 - package data into LLM query input
-    str_kg_summary = build_kg_llm_summary(name_disease, gene_set_groupings, gene_groupings)
+    str_kg_summary = build_kg_llm_summary(disease_name=name_disease,
+                                          gene_set_groupings=gene_set_groupings,
+                                          gene_groupings=gene_groupings)
 
     # return
     return str_kg_summary

@@ -1,3 +1,4 @@
+# DEPRECATED: Use driver.py --summary-type=gene instead.
 import json
 import argparse
 import os

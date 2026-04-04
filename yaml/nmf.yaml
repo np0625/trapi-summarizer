@@ -1,2 +1,5 @@
-model: gpt-4.1
-instructions: !file instructions-what-drugs-may-treat.txt
+model: o3
+reasoning:
+  effort: high
+  summary: detailed
+instructions: !file instructions-what-biological-nmf.txt

@@ -1,8 +1,9 @@
 from . import ui_tools
 from . import common_utils as cu
 
-def create_ui_summary(payload, idx: int):
-    presummary = ui_tools.create_ui_presummary(payload, idx)
+
+def format_ui_summary(presummary: dict, payload: dict) -> str:
+    """Format a pre-computed UI presummary into LLM-ready text."""
     node_summary = cu.create_node_data_summary(presummary['nodes'])
     edge_summary = cu.create_edge_data_summary(presummary['edges'], 1)
 
@@ -20,6 +21,11 @@ provides the associated reasoning/knowledge graph.
 
 {edge_summary}
 """
+
+
+def create_ui_summary(payload, idx: int):
+    presummary = ui_tools.create_ui_presummary(payload, idx)
+    return format_ui_summary(presummary, payload)
 
 def create_query_summary(payload):
     if 'data' in payload:

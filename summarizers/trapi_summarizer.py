@@ -4,13 +4,18 @@ from . import trapi_tools as tools
 from graphwerk import trapimsg
 from . import common_utils as cu
 
-def summarize_trapi_response(trapi_response_msg: dict, idx_range: range, pub_cutoff=5) -> str:
+def summarize_trapi_response(trapi_response_msg: dict, idx_range: range,
+                             pub_cutoff=5) -> tuple[str, dict, str]:
+    """Returns (summary_text, res_nodes, disease_name).
+    res_nodes is the accumulated node collection across all selected results,
+    keyed by CURIE, as built by trapimsg.collect_nodes_for_edge_collection().
+    """
     orig_msg = trapi_response_msg['fields']['data']['message']
     orig_kg = orig_msg['knowledge_graph']
     orig_ag = orig_msg['auxiliary_graphs']
     orig_qg = orig_msg['query_graph']
-    retval = ''
     object_node_id, object_node_data = tools.get_object_node_data(orig_qg, orig_kg)
+    disease_name = object_node_data['name']
     query_summmary = create_query_summary(object_node_id, object_node_data)
     res_nodes = {} # The node section is universal, not per-result
 
@@ -30,7 +35,7 @@ def summarize_trapi_response(trapi_response_msg: dict, idx_range: range, pub_cut
         per_result += cu.create_edge_data_summary(presum_edges, 1) + '\n'
         counter += 1
 
-    return f"""{query_summmary}
+    summary_text = f"""{query_summmary}
 
 {cu.create_node_data_summary(presum_nodes)}
 
@@ -41,6 +46,7 @@ provides the associated reasoning/knowledge graph.
 
 {per_result.rstrip()}
 """
+    return summary_text, res_nodes, disease_name
 
 
 def create_query_summary(object_id: str, object_data: dict) -> str:
