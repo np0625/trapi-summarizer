@@ -34,8 +34,10 @@ def shrink_payload(payload: dict, idx: int | tuple[int, ...] | range) -> dict:
         if first_iter:
             disease_curie = result_elem['object']
             retval['disease'] = disease_curie
-            retval['disease_description'] = orig_nodes[disease_curie]['descriptions'][0]
-            retval['disease_name'] = orig_nodes[disease_curie]['names'][0]
+            descs = orig_nodes[disease_curie].get('descriptions', [])
+            retval['disease_description'] = descs[0] if descs else ''
+            names = orig_nodes[disease_curie].get('names', [])
+            retval['disease_name'] = names[0] if names else ''
             first_iter = False
 
         retval['results'].append(result_elem)
