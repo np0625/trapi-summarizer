@@ -1,5 +1,6 @@
 import json
 import sys
+from dataclasses import dataclass
 import gene_info_client
 import jq
 from . import trapi_tools
@@ -8,6 +9,14 @@ from . import trapi_tools
 KEY_NMF_PIGEAN_FACTORS = "pigean-factor"
 KEY_NMF_DATA = "data"
 DEFAULT_MIN_GENES = 5
+
+@dataclass
+class NmfResult:
+    presummary: str
+    gene_set_groupings: dict
+    gene_groupings: dict
+    gene_count: int
+    below_threshold: bool
 
 def get_genes_from_trapi(trapi_response_message):
     # Extracts a list of genes from a trapi response
@@ -43,28 +52,34 @@ def extract_genes_from_ui_nodes(node_collection: list[dict]) -> dict[str, str]:
 
 async def generate_nmf_presummary(gene_dict: dict[str, str], disease_name: str,
                                    min_genes: int = DEFAULT_MIN_GENES,
-                                   timeout: float = 40.0) -> str:
+                                   timeout: float = 40.0) -> NmfResult | None:
     """Full pipeline: genes -> PiGEaN API -> parse NMF factors -> build pre-summary text.
-    Returns None if there are no genes at all. If gene count is nonzero but below
-    min_genes, prints a stderr warning and prepends a caveat to the pre-summary text.
+    Returns None if there are no genes at all. Otherwise returns an NmfResult
+    containing the pre-summary text and the raw groupings for post-processing.
     """
     gene_names = list(gene_dict.values())
     if len(gene_names) == 0:
         print("No genes found in result; skipping NMF analysis.", file=sys.stderr)
         return None
 
+    below_threshold = len(gene_names) < min_genes
     warning = ''
-    if len(gene_names) < min_genes:
+    if below_threshold:
         msg = (f"WARNING: Only {len(gene_names)} gene(s) found in result; "
                f"minimum {min_genes} recommended for reliable NMF analysis.")
         print(msg, file=sys.stderr)
         warning = (f"* CAVEAT: This result contains only {len(gene_names)} gene(s). "
                    f"NMF factor analysis with fewer than {min_genes} genes may not be reliable.\n\n")
 
-    nmf_result = await gene_info_client.get_nmf_analysis(gene_names, timeout)
-    gene_set_groupings = get_groupings_from_nmf(nmf_result, 'top_gene_sets')
-    gene_groupings = get_groupings_from_nmf(nmf_result, 'top_genes')
-    return build_kg_llm_summary(disease_name, gene_set_groupings, gene_groupings, warning)
+    nmf_response = await gene_info_client.get_nmf_analysis(gene_names, timeout)
+    gene_set_groupings = get_groupings_from_nmf(nmf_response, 'top_gene_sets')
+    gene_groupings = get_groupings_from_nmf(nmf_response, 'top_genes')
+    presummary = build_kg_llm_summary(disease_name, gene_set_groupings, gene_groupings, warning)
+    return NmfResult(presummary=presummary,
+                     gene_set_groupings=gene_set_groupings,
+                     gene_groupings=gene_groupings,
+                     gene_count=len(gene_names),
+                     below_threshold=below_threshold)
 
 
 def build_kg_llm_summary(disease_name: str, gene_set_groupings: dict, gene_groupings: dict,
@@ -88,6 +103,33 @@ Each item below specifies a latent factor grouping of genes.
     return str_template.format(warning, disease_name,
                                json.dumps(gene_set_groupings, indent=1),
                                json.dumps(gene_groupings, indent=1))
+
+
+def format_nmf_warning_html(gene_count: int, min_genes: int) -> str:
+    return (f'<p><strong>Warning:</strong> This analysis is based on only {gene_count} gene(s). '
+            f'A minimum of {min_genes} is recommended for reliable NMF factor analysis. '
+            f'Interpret with caution.</p>\n<hr>')
+
+
+def format_nmf_factor_html(gene_set_groupings: dict, gene_groupings: dict) -> str:
+    parts = ['<hr>', '<p><strong>NMF Factor Groupings</strong></p>']
+    for factor in gene_set_groupings:
+        gene_sets = ', '.join(gene_set_groupings.get(factor, []))
+        genes = ', '.join(gene_groupings.get(factor, []))
+        parts.append(
+            f'<p><strong>{factor}</strong><br>'
+            f'<em>Gene sets:</em> {gene_sets}<br>'
+            f'<em>Genes:</em> {genes}</p>')
+    return '\n'.join(parts)
+
+
+def wrap_nmf_response(llm_html: str, nmf_result: NmfResult, min_genes: int) -> str:
+    parts = []
+    if nmf_result.below_threshold:
+        parts.append(format_nmf_warning_html(nmf_result.gene_count, min_genes))
+    parts.append(llm_html)
+    parts.append(format_nmf_factor_html(nmf_result.gene_set_groupings, nmf_result.gene_groupings))
+    return '\n'.join(parts)
 
 
 async def generate_kg_summary_from_trapi_result(json_trapi_result):

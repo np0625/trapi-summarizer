@@ -82,24 +82,37 @@ def shrink_ui_payload(payload: dict, selected_idx: int) -> tuple[dict, int]:
     return payload, selected_idx
 
 
-async def execute_llm_call(client, summary_text: str, template_path: str, args):
-    """Run an LLM call using the specified template and execution mode."""
+async def execute_llm_call(client, summary_text: str, template_path: str, args,
+                           post_process=None):
+    """Run an LLM call using the specified template and execution mode.
+    If post_process is provided, it is applied to the LLM's output_text before printing.
+    """
     template = openai_lib.expand_yaml_template(template_path, ('instructions',))
 
     if args.run:
         resp = await client.responses.create(**template['params'],
                                                instructions=template['instructions'],
                                                input=summary_text)
-        print(resp)
+        if post_process:
+            print(post_process(resp.output_text))
+        else:
+            print(resp)
     elif args.loop:
         print(summary_text)
         resp = await client.run_as_loop(summary_text, template, llm_utils.handle_fun_call)
-        print(resp)
+        if post_process:
+            print(post_process(resp.output_text))
+        else:
+            print(resp)
     elif args.stream:
         print(summary_text)
+        final_event = None
         async for event in client.run_as_loop_streaming(summary_text, template, llm_utils.handle_fun_call,
                                                         1, None, 10, args.chunk):
+            final_event = event
             print(event)
+        if post_process and final_event:
+            print(post_process(final_event.get('output_text', '')))
     else:
         # Dry run: print pre-summary and template
         print(summary_text)
@@ -131,10 +144,12 @@ async def main():
 
         if args.summary_type in ('gene', 'both'):
             gene_dict = gene_nmf_utils.extract_genes_from_trapi_nodes(res_nodes)
-            nmf_summary = await gene_nmf_utils.generate_nmf_presummary(
+            nmf_result = await gene_nmf_utils.generate_nmf_presummary(
                 gene_dict, disease_name, args.min_genes)
-            if nmf_summary:
-                await execute_llm_call(client, nmf_summary, args.nmf_template, args)
+            if nmf_result:
+                post = lambda html: gene_nmf_utils.wrap_nmf_response(html, nmf_result, args.min_genes)
+                await execute_llm_call(client, nmf_result.presummary, args.nmf_template, args,
+                                       post_process=post)
 
     else:
         # UI format
@@ -157,10 +172,12 @@ async def main():
 
         if args.summary_type in ('gene', 'both'):
             gene_dict = gene_nmf_utils.extract_genes_from_ui_nodes(presummary['nodes'])
-            nmf_summary = await gene_nmf_utils.generate_nmf_presummary(
+            nmf_result = await gene_nmf_utils.generate_nmf_presummary(
                 gene_dict, presummary['disease_name'], args.min_genes)
-            if nmf_summary:
-                await execute_llm_call(client, nmf_summary, args.nmf_template, args)
+            if nmf_result:
+                post = lambda html: gene_nmf_utils.wrap_nmf_response(html, nmf_result, args.min_genes)
+                await execute_llm_call(client, nmf_result.presummary, args.nmf_template, args,
+                                       post_process=post)
 
 
 if __name__ == '__main__':
