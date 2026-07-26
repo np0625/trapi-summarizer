@@ -1,5 +1,4 @@
-params:
-  model: gpt-4.1
+model: gpt-4.1
 tools:
   - type: function
     name: get_pub_info
@@ -14,7 +13,7 @@ tools:
           type: string
           description: any unique identifier for this request to assist with tracing and debugging
     additionalProperties: false
-    required: 
+    required:
       - pubids
       - request_id
     strict: true

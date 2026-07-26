@@ -90,9 +90,7 @@ async def execute_llm_call(client, summary_text: str, template_path: str, args,
     template = openai_lib.expand_yaml_template(template_path, ('instructions',))
 
     if args.run:
-        resp = await client.responses.create(**template['params'],
-                                               instructions=template['instructions'],
-                                               input=summary_text)
+        resp = await client.responses.create(**template, input=summary_text)
         if post_process:
             print(post_process(resp.output_text))
         else:

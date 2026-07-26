@@ -94,9 +94,7 @@ async def main():
         template = openai_lib.expand_yaml_template(args.template, ('instructions',))
 
     if (args.run):
-        resp = await client.responses.create(**template['params'],
-                                               instructions=template['instructions'],
-                                               input=kg_summary)
+        resp = await client.responses.create(**template, input=kg_summary)
         print(resp)
     elif (args.loop):
         print(kg_summary)
