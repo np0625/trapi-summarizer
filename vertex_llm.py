@@ -211,33 +211,40 @@ class GeminiClient:
 
 
 # ---------- Anthropic (claude on Vertex) ----------
-# NOTE: untested until the Anthropic models are enabled in Model Garden for the
-# project (all calls 404 until then). Written to the documented AnthropicVertex API.
+# Verified working on claude-opus-4-6 (thinking + tools + streaming). Uses adaptive
+# thinking; older-generation models (e.g. sonnet-4-5) would instead need
+# {"type": "enabled", "budget_tokens": ...} and are not targeted here.
 
 def _anthropic_text(msg):
     return "".join(b.text for b in msg.content if getattr(b, "type", None) == "text")
 
 
 class AnthropicVertexClient:
-    def __init__(self, model="claude-sonnet-4-5@20250929", location=None,
-                 max_tokens=32000, thinking_budget=16000):
+    def __init__(self, model="claude-opus-4-6", location=None,
+                 max_tokens=32000, timeout=1200.0):
         from anthropic import AsyncAnthropicVertex
         creds, project = vertex_creds.load_credentials()
         self.model = model
         self.max_tokens = max_tokens
-        self.thinking_budget = thinking_budget
+        # An explicit timeout is required for non-streaming run()/run_as_loop():
+        # the SDK otherwise refuses non-streaming requests whose max_tokens *could*
+        # exceed a ~10-min completion (3600*max_tokens/128000 > 600s, i.e. max_tokens
+        # > ~21.3k). Setting client.timeout bypasses that guard.
         self._client = AsyncAnthropicVertex(region=location or vertex_creds.LOCATION,
-                                            project_id=project, credentials=creds)
+                                            project_id=project, credentials=creds,
+                                            timeout=timeout)
 
     def _kwargs(self, template):
         kw = {"model": self.model, "max_tokens": self.max_tokens}
-        if template.get("instructions"):
+        if template.get ("instructions"):
             kw["system"] = template["instructions"]
         tools = openai_tools_to_anthropic(template.get("tools"))
         if tools:
             kw["tools"] = tools
         if "reasoning" in template:
-            kw["thinking"] = {"type": "enabled", "budget_tokens": self.thinking_budget}
+            # Adaptive thinking (4.6+ generation, e.g. claude-opus-4-6). display=
+            # "summarized" so thinking summaries stream as reasoning events.
+            kw["thinking"] = {"type": "adaptive", "display": "summarized"}
         return kw
 
     async def run(self, orig_input, template):
@@ -315,5 +322,5 @@ def make_client(provider, model=None, **kwargs):
     if provider == "gemini":
         return GeminiClient(model=model or "gemini-2.5-pro", **kwargs)
     if provider == "anthropic":
-        return AnthropicVertexClient(model=model or "claude-sonnet-4-5@20250929", **kwargs)
+        return AnthropicVertexClient(model=model or "claude-opus-4-6", **kwargs)
     raise ValueError(f"unknown provider: {provider!r} (expected 'gemini' or 'anthropic')")
