@@ -1,13 +1,13 @@
 import httpx
 
-async def get_publication_info(pubids: list[str], request_id: str, timeout: float=4.0) -> dict:
+async def get_publication_info(pubids: list[str], request_id: str, timeout: float=15.0) -> dict:
     """
     Fetch publication information from the docmetadata.transltr.io API.
 
     Args:
         pubids: List of PUBMED and PMCIDs (e.g., ['PMID:36008391', 'PMID:8959199', 'PMC8959199']). Other ids will not work
         request_id: Unique identifier for the request (can be a placeholder for the foreseeable)
-        timeout: Request timeout in seconds (default: 4.0)
+        timeout: Request timeout in seconds (default: 15.0)
 
     Returns:
         { _meta: { n_results: N, processing time, etc. }

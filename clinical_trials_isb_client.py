@@ -1,6 +1,6 @@
 import httpx
 
-async def get_clinical_trials_isb_info(nct_ids: str | list[str], timeout: float = 4.0) -> dict:
+async def get_clinical_trials_isb_info(nct_ids: str | list[str], timeout: float = 15.0) -> dict:
     """
     Fetch clinical trial information from the ISB API.
     This API mimics the govt /v2 API, but because the .gov API seems to throttle
@@ -9,7 +9,7 @@ async def get_clinical_trials_isb_info(nct_ids: str | list[str], timeout: float 
 
     Args:
         nct_ids: Single NCT ID as string or list of NCT IDs (e.g., 'NCT00437242' or ['NCT00437242', 'NCT05279937'])
-        timeout: Request timeout in seconds (default: 4.0)
+        timeout: Request timeout in seconds (default: 15.0)
 
     Returns:
         JSON response from the ClinicalTrials.gov API containing study information

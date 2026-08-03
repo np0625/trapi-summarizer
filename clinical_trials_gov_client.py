@@ -1,12 +1,12 @@
 import httpx
 
-async def get_clinical_trials_gov_info(nct_ids: str | list[str], timeout: float = 4.0) -> dict:
+async def get_clinical_trials_gov_info(nct_ids: str | list[str], timeout: float = 15.0) -> dict:
     """
     Fetch clinical trial information from the ClinicalTrials.gov API.
 
     Args:
         nct_ids: Single NCT ID as string or list of NCT IDs (e.g., 'NCT00437242' or ['NCT00437242', 'NCT05279937'])
-        timeout: Request timeout in seconds (default: 4.0)
+        timeout: Request timeout in seconds (default: 15.0)
 
     Returns:
         JSON response from the ClinicalTrials.gov API containing study information
